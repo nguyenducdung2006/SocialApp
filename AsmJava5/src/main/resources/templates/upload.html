@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><title>Đăng tải</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/upload.css}">
+</head>
+<body>
+<nav class="top-navbar">
+    <a class="brand" th:href="@{/home}">✦ SocialApp</a>
+    <div class="flex-grow-1"></div>
+    <a th:href="@{/home}" class="nav-back"><i class="bi bi-arrow-left me-1"></i>Trang chủ</a>
+</nav>
+
+<div class="upload-wrap">
+    <div class="upload-card">
+        <h2 class="upload-title"><i class="bi bi-cloud-upload me-2"></i>Đăng tải tác phẩm</h2>
+
+        <div th:if="${error}"   class="alert-box error"   th:text="${error}"></div>
+        <div th:if="${success}" class="alert-box success" th:text="${success}"></div>
+
+        <form th:action="@{/upload}" method="post" enctype="multipart/form-data" id="uploadForm">
+            <!-- PREVIEW -->
+            <div class="drop-zone" id="dropZone">
+                <img id="previewImg" src="" alt="" style="display:none;">
+                <div class="drop-placeholder" id="dropPlaceholder">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <p>Kéo thả ảnh vào đây</p>
+                    <span>hoặc click để chọn • PNG, JPG, WEBP • Tối đa 10MB</span>
+                </div>
+                <input type="file" id="fileInput" name="image" accept="image/*" required>
+            </div>
+
+            <!-- TITLE -->
+            <div class="field-group">
+                <label class="field-label">Tiêu đề <span class="req">*</span></label>
+                <input type="text" name="title" class="field-input"
+                       placeholder="Nhập tiêu đề tác phẩm..." required maxlength="255">
+                <span class="char-count" id="titleCount">0/255</span>
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="field-group">
+                <label class="field-label">Mô tả</label>
+                <textarea name="description" class="field-input" rows="3"
+                          placeholder="Mô tả về tác phẩm của bạn..."></textarea>
+            </div>
+
+            <!-- TAGS -->
+            <div class="field-group">
+                <label class="field-label">Tags</label>
+                <div class="tag-input-wrap">
+                    <div class="tags-container" id="tagsContainer"></div>
+                    <input type="text" id="tagTyper" class="tag-typer" placeholder="Nhập tag rồi Enter...">
+                </div>
+                <input type="hidden" name="tags" id="tagsHidden">
+                <small class="field-hint">Nhấn Enter hoặc dấu phẩy để thêm tag</small>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <span class="btn-text"><i class="bi bi-cloud-upload me-2"></i>Đăng tải ngay</span>
+                <span class="btn-loading" style="display:none;">
+                    <span class="spinner-border spinner-border-sm me-2"></span>Đang tải...
+                </span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/upload.js}"></script>
+</body>
+</html>

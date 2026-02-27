@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="top-navbar">
+    <a class="brand" th:href="@{/home}">✦ SocialApp</a>
+    <div class="flex-grow-1"></div>
+    <a th:href="@{/upload}" class="nav-btn upload"><i class="bi bi-cloud-upload me-1"></i>Đăng tải</a>
+    <a th:href="@{/shop}" class="nav-btn shop"><i class="bi bi-shop me-1"></i>Cửa hàng</a>
+    <a th:href="@{/home}" class="nav-back"><i class="bi bi-arrow-left me-1"></i>Trang chủ</a>
+</nav>
+
+<!-- PROFILE HEADER -->
+<div class="profile-header"
+     th:classappend="${user.equippedBg != null ? ' has-bg' : ''}"
+     th:attr="data-bg=${user.equippedBg != null ? user.equippedBg : ''}">
+
+    <div class="cover-actions">
+        <label for="coverFileInput" class="cover-upload-btn">
+            <i class="bi bi-camera-fill me-1"></i>Đổi ảnh bìa
+        </label>
+        <form th:if="${user.equippedBg != null}"
+              th:action="@{/profile/remove-cover}" method="post" style="display:inline;">
+            <button type="submit" class="cover-remove-btn">
+                <i class="bi bi-x me-1"></i>Xóa
+            </button>
+        </form>
+        <form id="coverForm" th:action="@{/profile/update-cover}"
+              method="post" enctype="multipart/form-data">
+            <input type="file" id="coverFileInput" name="cover"
+                   accept="image/*" style="display:none">
+        </form>
+    </div>
+
+    <div class="profile-header-overlay">
+        <div class="profile-top">
+
+            <!-- AVATAR -->
+            <div class="avatar-wrap">
+                <div class="avatar-frame"
+                     th:classappend="${user.equippedFrame != null ? ' has-frame' : ''}"
+                     th:attr="data-frame=${user.equippedFrame != null ?
+                        (#strings.containsIgnoreCase(user.equippedFrame,'galaxy') ? 'galaxy' :
+                         #strings.containsIgnoreCase(user.equippedFrame,'sakura') ? 'sakura' :
+                         #strings.containsIgnoreCase(user.equippedFrame,'gold')   ? 'gold'   : 'default') : ''}">
+                    <img th:if="${user.avatarData != null}"
+                         th:src="@{/profile/avatar/{id}(id=${user.id})}"
+                         class="avatar-img" alt="avatar">
+                    <div th:if="${user.avatarData == null}" class="avatar-placeholder"
+                         th:text="${user.username != null ? user.username.substring(0,1).toUpperCase() : 'U'}">U</div>
+                </div>
+                <label class="avatar-edit-btn" id="openAvatarModal" title="Đổi avatar">
+                    <i class="bi bi-camera-fill"></i>
+                </label>
+            </div>
+
+            <!-- USER INFO -->
+            <div class="profile-info">
+                <div class="profile-name-wrap">
+                    <h1 class="profile-name"
+                        th:classappend="${user.equippedNameFx != null ? ' name-fx' : ''}"
+                        th:text="${user.fullName != null ? user.fullName : user.username}">Username</h1>
+                    <img th:if="${user.equippedNameFx != null}"
+                         th:src="${user.equippedNameFx}"
+                         th:attr="data-badge=${#strings.containsIgnoreCase(user.equippedNameFx,'vip') ? 'vip' : 'artist'}"
+                         class="profile-badge" alt="badge">
+                </div>
+                <div class="profile-username">@<span th:text="${user.username}">username</span></div>
+                <div class="profile-bio" th:text="${user.bio != null ? user.bio : 'Chưa có mô tả'}">Bio</div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-num" th:text="${posts != null ? posts.size() : 0}">0</span>
+                        <span class="stat-label">Tác phẩm</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-num" th:text="${totalLikes != null ? totalLikes : 0}">0</span>
+                        <span class="stat-label">Lượt thích</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-num" th:text="${totalViews != null ? totalViews : 0}">0</span>
+                        <span class="stat-label">Lượt xem</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-num"
+                              th:text="${#numbers.formatDecimal(user.walletBalance,0,'COMMA',0,'POINT') + 'đ'}">0đ</span>
+                        <span class="stat-label">Số dư</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="edit-profile-btn" id="editProfileBtn">
+                <i class="bi bi-pencil me-1"></i>Chỉnh sửa
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ALERTS -->
+<div class="content-wrap">
+    <div th:if="${success}" class="alert-box success" th:text="${success}"></div>
+    <div th:if="${error}"   class="alert-box error"   th:text="${error}"></div>
+</div>
+
+<!-- TABS -->
+<div class="profile-tabs">
+    <button class="tab-btn active" data-tab="posts">
+        <i class="bi bi-grid-3x3 me-1"></i>Tác phẩm
+        (<span th:text="${posts != null ? posts.size() : 0}">0</span>)
+    </button>
+    <button class="tab-btn" data-tab="items">
+        <i class="bi bi-bag-heart me-1"></i>Vật phẩm
+        (<span th:text="${purchases != null ? purchases.size() : 0}">0</span>)
+    </button>
+    <button class="tab-btn" data-tab="wallet">
+        <i class="bi bi-wallet2 me-1"></i>Ví tiền
+    </button>
+</div>
+
+<!-- ==================== -->
+<!-- TAB: POSTS           -->
+<!-- ==================== -->
+<div class="tab-content active" id="tab-posts">
+    <div class="content-wrap">
+        <div th:if="${posts == null or posts.empty}" class="empty-state">
+            <i class="bi bi-images"></i>
+            <p>Chưa có tác phẩm nào</p>
+            <a th:href="@{/upload}" class="empty-btn">Đăng tải ngay</a>
+        </div>
+        <div class="posts-grid" th:if="${posts != null and !posts.empty}">
+            <div th:each="post : ${posts}" class="post-card">
+                <div class="post-img-wrap">
+                    <img th:src="@{/upload/image/{id}(id=${post.id})}"
+                         th:alt="${post.title}" class="post-img">
+                    <div class="post-overlay">
+                        <div class="post-overlay-stats">
+                            <span><i class="bi bi-heart-fill"></i>
+                                <span th:text="${post.likesCount}">0</span></span>
+                            <span><i class="bi bi-eye-fill"></i>
+                                <span th:text="${post.views}">0</span></span>
+                        </div>
+                        <form th:action="@{/profile/delete-post/{id}(id=${post.id})}"
+                              method="post" onsubmit="return confirm('Xóa bài đăng này?')">
+                            <button type="submit" class="delete-post-btn">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="post-info">
+                    <div class="post-title" th:text="${post.title}">Tiêu đề</div>
+                    <div class="post-meta">
+                        <span th:each="tag : ${#strings.arraySplit(post.tags != null ? post.tags : '', ',')}"
+                              th:if="${!#strings.isEmpty(tag)}"
+                              class="post-tag" th:text="'#' + ${#strings.trim(tag)}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END TAB POSTS -->
+
+<!-- ==================== -->
+<!-- TAB: ITEMS           -->
+<!-- ==================== -->
+<div class="tab-content" id="tab-items">
+    <div class="content-wrap">
+
+        <!-- ĐANG TRANG BỊ -->
+        <div class="equipped-section">
+            <h3 class="section-title">⚡ Đang trang bị</h3>
+            <div class="equipped-grid">
+
+                <!-- Khung Avatar -->
+                <div class="equipped-slot"
+                     th:classappend="${user.equippedFrame != null ? ' active' : ''}">
+                    <div class="slot-label">🖼️ Khung Avatar</div>
+                    <div class="slot-preview frame-preview"
+                         th:classappend="${user.equippedFrame != null ? ' has-frame' : ''}">
+                        <img th:if="${user.equippedFrame != null}"
+                             th:src="${user.equippedFrame}" class="slot-img" alt="">
+                        <span th:if="${user.equippedFrame == null}"
+                              class="slot-empty">Chưa trang bị</span>
+                    </div>
+                    <form th:if="${user.equippedFrame != null}"
+                          th:action="@{/profile/unequip/FRAME}" method="post">
+                        <button type="submit" class="unequip-btn">
+                            <i class="bi bi-x-circle me-1"></i>Gỡ
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Badge -->
+                <div class="equipped-slot"
+                     th:classappend="${user.equippedNameFx != null ? ' active' : ''}">
+                    <div class="slot-label">🏅 Badge</div>
+                    <div class="slot-preview badge-preview">
+                        <img th:if="${user.equippedNameFx != null}"
+                             th:src="${user.equippedNameFx}"
+                             th:attr="data-badge=${#strings.containsIgnoreCase(user.equippedNameFx,'vip') ? 'vip' : 'artist'}"
+                             class="slot-img badge-anim" alt="">
+                        <span th:if="${user.equippedNameFx == null}"
+                              class="slot-empty">Chưa trang bị</span>
+                    </div>
+                    <form th:if="${user.equippedNameFx != null}"
+                          th:action="@{/profile/unequip/BADGE}" method="post">
+                        <button type="submit" class="unequip-btn">
+                            <i class="bi bi-x-circle me-1"></i>Gỡ
+                        </button>
+                    </form>
+                </div>
+
+            </div><!-- end equipped-grid -->
+        </div><!-- end equipped-section -->
+
+        <!-- KHO VẬT PHẨM -->
+        <h3 class="section-title mt-4">🎒 Kho vật phẩm</h3>
+        <div th:if="${purchases == null or purchases.empty}" class="empty-state">
+            <i class="bi bi-bag-x"></i>
+            <p>Chưa có vật phẩm nào</p>
+            <a th:href="@{/shop}" class="empty-btn">Đến cửa hàng</a>
+        </div>
+        <div class="items-grid" th:if="${purchases != null and !purchases.empty}">
+            <div th:each="p : ${purchases}"
+                 th:if="${p.item.itemType != 'PROFILE_THEME'
+                      and p.item.itemType != 'PROFILE_BG'
+                      and p.item.itemType != 'NEWSFEED_THEME'}"
+                 class="owned-item"
+                 th:classappend="${p.isEquipped != null and p.isEquipped ? ' equipped' : ''}">
+
+                <div class="owned-img-wrap">
+                    <img th:src="${p.item.imageUrl}"
+                         th:alt="${p.item.itemName}" class="owned-img">
+                    <div th:if="${p.isEquipped != null and p.isEquipped}"
+                         class="equipped-overlay">
+                        <span class="equipped-check">✓</span>
+                    </div>
+                </div>
+                <div class="owned-info">
+                    <div class="owned-name" th:text="${p.item.itemName}">Tên</div>
+                    <div class="owned-type" th:text="${
+                        p.item.itemType == 'FRAME' ? '🖼️ Khung Avatar' :
+                        p.item.itemType == 'BADGE' ? '🏅 Badge' :
+                        '😊 Sticker'}">Loại</div>
+                </div>
+                <div class="owned-actions">
+                    <span th:if="${p.isEquipped != null and p.isEquipped}"
+                          class="equipped-badge-label">✓ Đang dùng</span>
+                    <form th:if="${p.isEquipped == null or !p.isEquipped}"
+                          th:action="@{/profile/equip/{id}(id=${p.id})}" method="post">
+                        <button type="submit" class="equip-btn">
+                            <i class="bi bi-lightning-charge-fill me-1"></i>Trang bị
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div><!-- end items-grid -->
+
+    </div><!-- end content-wrap -->
+</div>
+<!-- END TAB ITEMS -->
+
+<!-- ==================== -->
+<!-- TAB: WALLET          -->
+<!-- ==================== -->
+<div class="tab-content" id="tab-wallet">
+    <div class="content-wrap">
+        <div class="wallet-summary">
+            <div class="ws-card gold">
+                <i class="bi bi-wallet2"></i>
+                <div>
+                    <div class="ws-label">Số dư hiện tại</div>
+                    <div class="ws-value"
+                         th:text="${#numbers.formatDecimal(user.walletBalance,0,'COMMA',0,'POINT') + 'đ'}">0đ</div>
+                </div>
+            </div>
+            <div class="ws-card purple">
+                <i class="bi bi-bag-check"></i>
+                <div>
+                    <div class="ws-label">Đã mua</div>
+                    <div class="ws-value"
+                         th:text="${(purchases != null ? purchases.size() : 0) + ' vật phẩm'}">0</div>
+                </div>
+            </div>
+            <div class="ws-actions">
+                <a th:href="@{/wallet/recharge}" class="ws-btn recharge">
+                    <i class="bi bi-lightning-charge me-1"></i>Nạp tiền
+                </a>
+                <a th:href="@{/shop}" class="ws-btn shop">
+                    <i class="bi bi-shop me-1"></i>Mua vật phẩm
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END TAB WALLET -->
+
+<!-- ===================== -->
+<!-- MODAL UPLOAD AVATAR   -->
+<!-- ===================== -->
+<div class="modal-overlay" id="avatarModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="bi bi-person-circle me-2"></i>Đổi Avatar</h3>
+            <button class="modal-close" id="closeAvatarModal">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <form th:action="@{/profile/update-avatar}" method="post"
+              enctype="multipart/form-data">
+            <div class="modal-avatar-preview">
+                <img id="avatarPreviewImg"
+                     th:src="${user.avatarData != null ? '/profile/avatar/' + user.id : ''}"
+                     th:style="${user.avatarData == null ? 'display:none' : ''}" alt="avatar">
+                <div id="avatarPreviewPlaceholder"
+                     th:style="${user.avatarData != null ? 'display:none' : ''}"
+                     th:text="${user.username != null ? user.username.substring(0,1).toUpperCase() : 'U'}">U</div>
+            </div>
+            <div class="avatar-upload-area">
+                <input type="file" id="avatarFileInput" name="avatar"
+                       accept="image/*" style="display:none">
+                <label for="avatarFileInput" class="avatar-upload-label">
+                    <i class="bi bi-cloud-upload"
+                       style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+                    <span>Click để chọn ảnh từ thiết bị</span>
+                    <span class="avatar-upload-hint">JPG, PNG, GIF — tối đa 5MB</span>
+                </label>
+            </div>
+            <div id="avatarFileName" class="avatar-file-name" style="display:none;"></div>
+            <div class="modal-footer">
+                <button type="button" class="cancel-btn" id="cancelAvatar">Hủy</button>
+                <button type="submit" class="save-btn" id="saveAvatarBtn" disabled>
+                    <i class="bi bi-check2 me-1"></i>Lưu avatar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===================== -->
+<!-- MODAL EDIT PROFILE    -->
+<!-- ===================== -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3><i class="bi bi-pencil me-2"></i>Chỉnh sửa Profile</h3>
+            <button class="modal-close" id="closeModal">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <form th:action="@{/profile/update}" method="post">
+            <div class="field-group">
+                <label class="field-label">Tên hiển thị</label>
+                <input type="text" name="fullName" class="field-input"
+                       th:value="${user.fullName}"
+                       placeholder="Nhập tên hiển thị..." maxlength="100">
+            </div>
+            <div class="field-group">
+                <label class="field-label">Bio</label>
+                <textarea name="bio" class="field-input" rows="3"
+                          placeholder="Giới thiệu bản thân..."
+                          th:text="${user.bio}"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="cancel-btn" id="cancelEdit">Hủy</button>
+                <button type="submit" class="save-btn">
+                    <i class="bi bi-check2 me-1"></i>Lưu thay đổi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/js/profile.js}"></script>
+</body>
+</html>
