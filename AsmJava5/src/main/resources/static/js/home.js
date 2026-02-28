@@ -1,16 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
-(function () {
-    const homeBg = document.body.getAttribute('data-homebg');
-    if (homeBg && homeBg !== '') {
-        document.body.style.backgroundImage = 'url(' + homeBg + ')';
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundPosition = 'center';
-        document.body.style.backgroundAttachment = 'fixed';
-        // Bật overlay
-        const overlay = document.getElementById('homeBgOverlay');
-        if (overlay) overlay.style.display = 'block';
-    }
-})();
+    (function () {
+        const homeBg = document.body.getAttribute('data-homebg');
+        if (homeBg && homeBg !== '') {
+            document.body.style.backgroundImage = 'url(' + homeBg + ')';
+            document.body.style.backgroundSize = 'cover';
+            document.body.style.backgroundPosition = 'center';
+            document.body.style.backgroundAttachment = 'fixed';
+            // Bật overlay
+            const overlay = document.getElementById('homeBgOverlay');
+            if (overlay) overlay.style.display = 'block';
+        }
+    })();
     // ===== TAB SWITCHING =====
     document.querySelectorAll('.tab-link').forEach(tab => {
         tab.addEventListener('click', function (e) {
@@ -24,12 +24,27 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.like-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            const isLiked = this.classList.toggle('liked');
-            const parts = this.innerHTML.split(' ');
-            const icon = '<i class="bi bi-heart' + (isLiked ? '-fill' : '') + '"></i>';
-            let count = parseInt(parts[parts.length - 1]);
-            count = isLiked ? count + 1 : count - 1;
-            this.innerHTML = icon + ' ' + count;
+            e.preventDefault();
+            const postId = this.getAttribute('data-id');
+            if (!postId) return;
+            fetch(`/post/${postId}/react`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(res => { if (res.status === 401) { window.location.href = '/auth/login'; throw new Error(); } return res.json(); })
+                .then(data => {
+                    const icon = this.querySelector('i');
+                    const countSpan = this.querySelector('span');
+                    if (data.reacted) {
+                        this.classList.add('liked');
+                        if (icon) { icon.classList.remove('bi-heart'); icon.classList.add('bi-heart-fill'); }
+                    } else {
+                        this.classList.remove('liked');
+                        if (icon) { icon.classList.remove('bi-heart-fill'); icon.classList.add('bi-heart'); }
+                    }
+                    if (countSpan && data.count !== undefined) countSpan.textContent = data.count;
+                })
+                .catch(() => { });
         });
     });
 
@@ -37,11 +52,27 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.save-btn').forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.stopPropagation();
-            const isSaved = this.classList.toggle('saved');
-            this.innerHTML = isSaved
-                ? '<i class="bi bi-bookmark-fill"></i>'
-                : '<i class="bi bi-bookmark"></i>';
-            showToast(isSaved ? '✅ Đã lưu tác phẩm!' : '🗑️ Đã bỏ lưu!');
+            e.preventDefault();
+            const postId = this.getAttribute('data-id');
+            if (!postId) return;
+            fetch(`/post/${postId}/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            })
+                .then(res => { if (res.status === 401) { window.location.href = '/auth/login'; throw new Error(); } return res.json(); })
+                .then(data => {
+                    const icon = this.querySelector('i');
+                    if (data.saved) {
+                        this.classList.add('saved');
+                        if (icon) { icon.classList.remove('bi-bookmark'); icon.classList.add('bi-bookmark-fill'); }
+                        showToast('\u2705 Đã lưu tác phẩm!');
+                    } else {
+                        this.classList.remove('saved');
+                        if (icon) { icon.classList.remove('bi-bookmark-fill'); icon.classList.add('bi-bookmark'); }
+                        showToast('\uD83D\uDDD1️ Đã bỏ lưu!');
+                    }
+                })
+                .catch(() => { });
         });
     });
 
@@ -83,81 +114,145 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.style.overflow = '';
     }
 
-    // ===== LOAD MORE =====
+    // ===== AJAX FEED =====
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     const grid = document.getElementById('mainGrid');
+    const feedTabs = document.querySelectorAll('.feed-tab');
     let page = 1;
+    let currentTab = 'new'; // Mặc định
 
-    const extraCards = [
-        { seed: 'art7',  title: 'Night City',      author: '@artist_g', views: '1.8k', color: '#e91e63' },
-        { seed: 'art8',  title: 'Dragon Fly',       author: '@artist_h', views: '2.4k', color: '#ff9800' },
-        { seed: 'art9',  title: 'Forest Spirit',    author: '@artist_i', views: '3.1k', color: '#009688' },
-        { seed: 'art10', title: 'Cyber Girl',        author: '@artist_j', views: '5.2k', color: '#3f51b5' },
-        { seed: 'art11', title: 'Sakura Season',    author: '@artist_k', views: '4.7k', color: '#e91e63' },
-        { seed: 'art12', title: 'Mountain Peak',    author: '@artist_l', views: '900',  color: '#607d8b' },
-    ];
+    // Bắt sự kiện chuyển Tab
+    feedTabs.forEach(t => {
+        t.addEventListener('click', function (e) {
+            e.preventDefault();
+            feedTabs.forEach(f => f.classList.remove('active'));
+            this.classList.add('active');
 
-    loadMoreBtn.addEventListener('click', function () {
-        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...';
-        this.disabled = true;
+            currentTab = this.getAttribute('data-target');
+            page = 1; // Reset trang
+            if (grid) grid.innerHTML = ''; // Clear Feed
 
-        setTimeout(() => {
-            extraCards.forEach(card => {
-                const el = document.createElement('div');
-                el.className = 'img-card';
-                el.innerHTML = `
-                    <img src="https://picsum.photos/seed/${card.seed}/300/300" class="img-thumb" alt="">
-                    <div class="img-overlay">
-                        <button class="overlay-btn like-btn"><i class="bi bi-heart"></i> ${Math.floor(Math.random()*400+50)}</button>
-                        <button class="overlay-btn save-btn"><i class="bi bi-bookmark"></i></button>
-                    </div>
-                    <div class="img-info">
-                        <div class="img-title">${card.title}</div>
-                        <div class="img-meta">
-                            <div class="img-author">
-                                <div class="author-dot" style="background:${card.color};">${card.author[1].toUpperCase()}</div>
-                                ${card.author}
-                            </div>
-                            <div class="img-stats"><i class="bi bi-eye"></i> ${card.views}</div>
-                        </div>
-                    </div>
-                `;
-
-                // Gắn lại events cho card mới
-                el.querySelector('.like-btn').addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const isLiked = this.classList.toggle('liked');
-                    const count = parseInt(this.textContent.trim()) + (isLiked ? 1 : -1);
-                    this.innerHTML = `<i class="bi bi-heart${isLiked ? '-fill' : ''}"></i> ${count}`;
-                });
-                el.querySelector('.save-btn').addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const isSaved = this.classList.toggle('saved');
-                    this.innerHTML = isSaved ? '<i class="bi bi-bookmark-fill"></i>' : '<i class="bi bi-bookmark"></i>';
-                    showToast(isSaved ? '✅ Đã lưu tác phẩm!' : '🗑️ Đã bỏ lưu!');
-                });
-                el.addEventListener('click', function() {
-                    const img = this.querySelector('.img-thumb');
-                    if (img) {
-                        lightboxImg.src = img.src;
-                        lightbox.classList.add('show');
-                        document.body.style.overflow = 'hidden';
-                    }
-                });
-
-                grid.appendChild(el);
-            });
-
-            loadMoreBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Tải thêm';
-            loadMoreBtn.disabled = false;
-            page++;
-
-            if (page >= 3) {
-                loadMoreBtn.textContent = 'Đã hết';
+            // Hiện chữ tải...
+            if (loadMoreBtn) {
+                loadMoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...';
                 loadMoreBtn.disabled = true;
+                loadMoreBtn.style.display = 'flex'; // Hiện lại nếu trước đó bị Tắt
             }
-        }, 800);
+
+            fetchData();
+        });
     });
+
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tải...';
+            this.disabled = true;
+            fetchData();
+        });
+    }
+
+    // Tải bài viết lần đầu khi trang được load
+    fetchData();
+
+    function fetchData() {
+        if (!loadMoreBtn || !grid) return;
+
+        fetch(`/api/posts?page=${page}&tab=${currentTab}`)
+            .then(res => {
+                if (res.status === 401) {
+                    window.location.href = '/auth/login';
+                    throw new Error("Yêu cầu đăng nhập");
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.length === 0) {
+                    loadMoreBtn.textContent = 'Đã hết bài viết';
+                    loadMoreBtn.disabled = true;
+                    return;
+                }
+
+                data.forEach(post => {
+                    const el = document.createElement('div');
+                    el.className = 'img-card';
+
+                    let imgSource = '';
+                    if (post.imageData) {
+                        imgSource = `/upload/image/${post.id}`;
+                    } else if (post.imageUrl) {
+                        imgSource = post.imageUrl;
+                    }
+
+                    // Avatar logic
+                    let avatarSection = '';
+                    if (post.user && post.user.avatarData) {
+                        avatarSection = `<img src="/profile/avatar/${post.user.id}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:6px;" alt=""/>`;
+                    } else if (post.user) {
+                        avatarSection = `<div class="author-dot d-flex align-items-center justify-content-center text-white" style="background:#e91e63;">${post.user.username.substring(0, 1).toUpperCase()}</div>`;
+                    }
+
+                    el.innerHTML = `
+                        <a href="/post/${post.id}">
+                            <img src="${imgSource}" class="img-thumb" alt="">
+                        </a>
+                        <div class="img-overlay">
+                            <button class="overlay-btn like-btn" data-id="${post.id}">
+                                <i class="bi bi-heart-fill"></i> <span>${post.likesCount || 0}</span>
+                            </button>
+                        </div>
+                        <div class="img-info">
+                            <a href="/post/${post.id}" class="text-decoration-none text-light">
+                                <div class="img-title">${post.title}</div>
+                            </a>
+                            <div class="img-meta">
+                                <a href="/profile/view/${post.user.id}" class="text-decoration-none text-muted w-100">
+                                    <div class="img-author d-flex align-items-center">
+                                        ${avatarSection}
+                                        <span class="ms-1">@${post.user.username}</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+
+                    // Attach like listener
+                    const likeBtn = el.querySelector('.like-btn');
+                    if (likeBtn) {
+                        likeBtn.addEventListener('click', function (e) {
+                            e.stopPropagation(); e.preventDefault();
+                            const pid = this.getAttribute('data-id');
+                            fetch(`/post/${pid}/react`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
+                                .then(r => { if (r.status === 401) { window.location.href = '/auth/login'; throw new Error(); } return r.json(); })
+                                .then(d => {
+                                    const ic = this.querySelector('i');
+                                    const sp = this.querySelector('span');
+                                    if (d.reacted) { this.classList.add('liked'); if (ic) { ic.classList.remove('bi-heart'); ic.classList.add('bi-heart-fill'); } }
+                                    else { this.classList.remove('liked'); if (ic) { ic.classList.remove('bi-heart-fill'); ic.classList.add('bi-heart'); } }
+                                    if (sp && d.count !== undefined) sp.textContent = d.count;
+                                }).catch(() => { });
+                        });
+                    }
+
+
+                    grid.appendChild(el);
+                });
+
+                page++;
+                loadMoreBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Tải thêm';
+                loadMoreBtn.disabled = false;
+
+                if (data.length < 6) {
+                    loadMoreBtn.textContent = 'Đã hết';
+                    loadMoreBtn.disabled = true;
+                }
+            })
+            .catch(err => {
+                console.error('Lỗi khi tải bài viết:', err);
+                loadMoreBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>Tải thêm';
+                loadMoreBtn.disabled = false;
+            });
+    }
 
     // ===== TOAST NOTIFICATION =====
     function showToast(message) {

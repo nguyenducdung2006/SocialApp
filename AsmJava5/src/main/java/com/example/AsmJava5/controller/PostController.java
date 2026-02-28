@@ -23,6 +23,8 @@ public class PostController {
     private final CommentRepository commentRepository;
     private final ReactionRepository reactionRepository;
     private final ReportRepository reportRepository;
+    private final FollowRepository followRepository;
+    private final SavedPostRepository savedPostRepository;
 
     // ===== XEM CHI TIẾT BÀI ĐĂNG =====
     @GetMapping("/post/{id}")
@@ -57,7 +59,22 @@ public class PostController {
         boolean isOwner = currentUser != null &&
                 currentUser.getId().equals(post.getUser().getId());
 
+        boolean isFollowing = false;
+        if (currentUser != null && !isOwner) {
+            isFollowing = followRepository.existsByFollowerIdAndFollowingId(
+                    currentUser.getId(), post.getUser().getId()
+            );
+        }
+
+        // Kiểm tra xem đã lưu chưa
+        boolean isSaved = false;
+        if (currentUser != null) {
+            isSaved = savedPostRepository.existsByUserIdAndPostId(currentUser.getId(), id);
+        }
+
         model.addAttribute("post", post);
+        model.addAttribute("isFollowing", isFollowing);
+        model.addAttribute("isSaved", isSaved);
         model.addAttribute("comments", comments);
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("isReacted", isReacted);
@@ -204,6 +221,34 @@ public class PostController {
                 "reactionType", currentType != null ? currentType : "",
                 "count", post.getLikesCount()
         ));
+    }
+
+    // ===== LƯU BÀI ĐĂNG (BOOKMARK) =====
+    @PostMapping("/post/{id}/save")
+    @ResponseBody
+    public ResponseEntity<?> savePost(@PathVariable Long id, HttpSession session) {
+        String email = (String) session.getAttribute("email");
+        if (email == null) return ResponseEntity.status(401).body("Chưa đăng nhập");
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) return ResponseEntity.status(401).body("Không tìm thấy user");
+
+        Post post = postRepository.findById(id).orElse(null);
+        if (post == null) return ResponseEntity.notFound().build();
+
+        boolean existing = savedPostRepository.existsByUserIdAndPostId(user.getId(), id);
+        if (existing) {
+            savedPostRepository.deleteByUserIdAndPostId(user.getId(), id);
+            return ResponseEntity.ok(Map.of("saved", false));
+        } else {
+            SavedPost savedPost = SavedPost.builder()
+                .user(user)
+                .post(post)
+                .createdAt(LocalDateTime.now())
+                .build();
+            savedPostRepository.save(savedPost);
+            return ResponseEntity.ok(Map.of("saved", true));
+        }
     }
 
     // ===== BÌNH LUẬN =====

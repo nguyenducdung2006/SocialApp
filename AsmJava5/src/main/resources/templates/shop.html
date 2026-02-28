@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,140 +8,134 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/shop.css}">
 </head>
+
 <body>
 
-<nav class="top-navbar">
-    <a class="brand" th:href="@{/home}">✦ SocialApp</a>
-    <div class="nav-spacer"></div>
-    <div class="wallet-badge">
-        <i class="bi bi-wallet2"></i>
-        <span th:text="${#numbers.formatDecimal(user.walletBalance,0,'COMMA',0,'POINT') + 'đ'}">0đ</span>
-    </div>
-    <a th:href="@{/wallet/recharge}" class="nav-btn recharge-btn">
-        <i class="bi bi-lightning-charge-fill me-1"></i>Nạp tiền
-    </a>
-    <a th:href="@{/profile}" class="nav-btn profile-btn">
-        <i class="bi bi-person-fill me-1"></i>Profile
-    </a>
-    <a th:href="@{/home}" class="nav-btn back-btn">
-        <i class="bi bi-arrow-left me-1"></i>Trang chủ
-    </a>
-</nav>
+    <nav class="top-navbar">
+        <a class="brand" th:href="@{/home}">✦ SocialApp</a>
+        <div class="nav-spacer"></div>
+        <div class="wallet-badge">
+            <i class="bi bi-wallet2"></i>
+            <span th:text="${#numbers.formatDecimal(user.walletBalance,0,'COMMA',0,'POINT') + 'đ'}">0đ</span>
+        </div>
+        <a th:href="@{/wallet/recharge}" class="nav-btn recharge-btn">
+            <i class="bi bi-lightning-charge-fill me-1"></i>Nạp tiền
+        </a>
+        <a th:href="@{/profile}" class="nav-btn profile-btn">
+            <i class="bi bi-person-fill me-1"></i>Profile
+        </a>
+        <a th:href="@{/home}" class="nav-btn back-btn">
+            <i class="bi bi-arrow-left me-1"></i>Trang chủ
+        </a>
+    </nav>
 
-<div class="page-container">
+    <div class="page-container">
 
-    <!-- ALERTS -->
-    <div th:if="${success}" class="alert-box success">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        <span th:text="${success}"></span>
-    </div>
-    <div th:if="${error}" class="alert-box error">
-        <i class="bi bi-exclamation-circle-fill me-2"></i>
-        <span th:text="${error}"></span>
-    </div>
+        <!-- ALERTS -->
+        <div th:if="${success}" class="alert-box success">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="alert-box error">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            <span th:text="${error}"></span>
+        </div>
 
-    <!-- PAGE HEADER -->
-    <div class="shop-header">
-        <div class="shop-header-icon">🛍️</div>
-        <h1 class="shop-title">Cửa hàng vật phẩm</h1>
-        <p class="shop-subtitle">Trang trí avatar và profile của bạn</p>
-    </div>
+        <!-- PAGE HEADER -->
+        <div class="shop-header">
+            <div class="shop-header-icon">🛍️</div>
+            <h1 class="shop-title">Cửa hàng vật phẩm</h1>
+            <p class="shop-subtitle">Trang trí avatar và profile của bạn</p>
+        </div>
 
-    <!-- FILTER TABS -->
-    <div class="filter-tabs">
-        <button class="filter-tab active" data-type="ALL">
-            <i class="bi bi-grid-3x3-gap me-1"></i>Tất cả
-        </button>
-        <button class="filter-tab" data-type="FRAME">
-            <i class="bi bi-image me-1"></i>Khung Avatar
-        </button>
-        <button class="filter-tab" data-type="BADGE">
-            <i class="bi bi-award me-1"></i>Badge
-        </button>
-        <button class="filter-tab" data-type="STICKER">
-            <i class="bi bi-emoji-smile me-1"></i>Sticker
-        </button>
-    </div>
+        <!-- FILTER TABS -->
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-type="ALL">
+                <i class="bi bi-grid-3x3-gap me-1"></i>Tất cả
+            </button>
+            <button class="filter-tab" data-type="FRAME">
+                <i class="bi bi-image me-1"></i>Khung Avatar
+            </button>
+            <button class="filter-tab" data-type="BADGE">
+                <i class="bi bi-award me-1"></i>Badge
+            </button>
+            <button class="filter-tab" data-type="STICKER">
+                <i class="bi bi-emoji-smile me-1"></i>Sticker
+            </button>
+        </div>
 
-    <!-- ITEM COUNT -->
-    <div class="item-count">
-        <span id="visibleCount" th:text="${items != null ? items.size() : 0}">0</span> vật phẩm
-    </div>
+        <!-- ITEM COUNT -->
+        <div class="item-count">
+            <span id="visibleCount" th:text="${items != null ? items.size() : 0}">0</span> vật phẩm
+        </div>
 
-    <!-- SHOP GRID -->
-    <div class="shop-grid" id="shopGrid">
-        <div th:each="item : ${items}"
-             class="shop-card"
-             th:attr="data-type=${item.itemType}">
+        <!-- SHOP GRID -->
+        <div class="shop-grid" id="shopGrid">
+            <div th:each="item : ${items}" class="shop-card" th:attr="data-type=${item.itemType}">
 
-            <!-- Ảnh -->
-            <div class="card-img-wrap">
-                <img th:src="${item.imageUrl}"
-                     th:alt="${item.itemName}"
-                     class="card-img"
-                     loading="lazy">
+                <!-- Ảnh -->
+                <div class="card-img-wrap">
+                    <img th:src="${item.imageUrl}" th:alt="${item.itemName}" class="card-img" loading="lazy">
 
-                <!-- Type badge -->
-                <div class="card-type-badge" th:text="${
+                    <!-- Type badge -->
+                    <div class="card-type-badge" th:text="${
                     item.itemType == 'FRAME'  ? '🖼️ Khung' :
                     item.itemType == 'BADGE'  ? '🏅 Badge'  :
                     '😊 Sticker'}">Loại</div>
 
-                <!-- Owned overlay -->
-                <div th:if="${ownedItemIds != null and ownedItemIds.contains(item.id)}"
-                     class="card-owned-overlay">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <span>Đã sở hữu</span>
+                    <!-- Owned overlay -->
+                    <div th:if="${ownedItemIds != null and ownedItemIds.contains(item.id)}" class="card-owned-overlay">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Đã sở hữu</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Info -->
-            <div class="card-body">
-                <div class="card-name" th:text="${item.itemName}">Tên vật phẩm</div>
-                <div class="card-desc" th:text="${item.description}">Mô tả</div>
-                <div class="card-price">
-                    <i class="bi bi-coin"></i>
-                    <span th:text="${#numbers.formatDecimal(item.price,0,'COMMA',0,'POINT') + 'đ'}">0đ</span>
+                <!-- Info -->
+                <div class="card-body">
+                    <div class="card-name" th:text="${item.itemName}">Tên vật phẩm</div>
+                    <div class="card-desc" th:text="${item.description}">Mô tả</div>
+                    <div class="card-price">
+                        <i class="bi bi-coin"></i>
+                        <span th:text="${#numbers.formatDecimal(item.price,0,'COMMA',0,'POINT') + 'đ'}">0đ</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Action -->
-            <div class="card-footer">
-                <!-- Đã sở hữu -->
-                <div th:if="${ownedItemIds != null and ownedItemIds.contains(item.id)}"
-                     class="owned-badge">
-                    <i class="bi bi-check2-all me-1"></i>Đã sở hữu
-                </div>
-                <!-- Chưa mua -->
-                <form th:if="${ownedItemIds == null or !ownedItemIds.contains(item.id)}"
-                      th:action="@{/shop/buy/{id}(id=${item.id})}"
-                      method="post"
-                      th:data-name="${item.itemName}">
-                    <button type="submit"
-                            class="buy-btn"
+                <!-- Action -->
+                <div class="card-footer">
+                    <!-- Đã sở hữu -->
+                    <div th:if="${ownedItemIds != null and ownedItemIds.contains(item.id)}" class="owned-badge">
+                        <i class="bi bi-check2-all me-1"></i>Đã sở hữu
+                    </div>
+                    <!-- Chưa mua -->
+                    <form th:if="${ownedItemIds == null or !ownedItemIds.contains(item.id)}"
+                        th:action="@{/shop/buy/{id}(id=${item.id})}" method="post" th:data-name="${item.itemName}">
+                        <button type="submit" class="buy-btn"
                             th:classappend="${user.walletBalance.compareTo(item.price) < 0 ? ' btn-broke' : ''}"
                             th:disabled="${user.walletBalance.compareTo(item.price) < 0}"
-                            th:onclick="${'return confirm(\'Mua ' + item.itemName + ' với giá ' + #numbers.formatDecimal(item.price,0,\'COMMA\',0,\'POINT\') + 'đ?\')'}">
-                        <span th:if="${user.walletBalance.compareTo(item.price) >= 0}">
-                            <i class="bi bi-cart-plus-fill me-1"></i>Mua ngay
-                        </span>
-                        <span th:if="${user.walletBalance.compareTo(item.price) < 0}">
-                            <i class="bi bi-wallet2 me-1"></i>Không đủ tiền
-                        </span>
-                    </button>
-                </form>
+                            th:data-name="${item.itemName}"
+                            th:data-price="${#numbers.formatDecimal(item.price,0,'COMMA',0,'POINT')}"
+                            onclick="return confirm('Mua ' + this.getAttribute('data-name') + ' với giá ' + this.getAttribute('data-price') + 'đ?')">
+                            <span th:if="${user.walletBalance.compareTo(item.price) >= 0}">
+                                <i class="bi bi-cart-plus-fill me-1"></i>Mua ngay
+                            </span>
+                            <span th:if="${user.walletBalance.compareTo(item.price) < 0}">
+                                <i class="bi bi-wallet2 me-1"></i>Không đủ tiền
+                            </span>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <i class="bi bi-bag-x-fill"></i>
+            <p>Không có vật phẩm nào trong danh mục này</p>
+        </div>
+
     </div>
 
-    <!-- Empty state -->
-    <div class="empty-state" id="emptyState" style="display:none;">
-        <i class="bi bi-bag-x-fill"></i>
-        <p>Không có vật phẩm nào trong danh mục này</p>
-    </div>
-
-</div>
-
-<script th:src="@{/js/shop.js}"></script>
+    <script th:src="@{/js/shop.js}"></script>
 </body>
+
 </html>

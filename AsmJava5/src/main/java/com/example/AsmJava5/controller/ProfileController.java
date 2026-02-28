@@ -27,6 +27,9 @@ public class ProfileController {
     private final PostService postService;
     private final ShopService shopService;
     private final UserPurchaseRepository userPurchaseRepository;
+    private final PostRepository postRepository;
+    private final FollowRepository followRepository;
+    private final ReactionRepository reactionRepository;
 
     private User getUser(HttpSession session) {
         String email = (String) session.getAttribute("email");
@@ -66,15 +69,102 @@ public class ProfileController {
         Map<String, List<UserPurchase>> itemsByType = purchases.stream()
                 .collect(Collectors.groupingBy(p -> p.getItem().getItemType()));
 
+        // Lấy danh sách Reaction (Yêu Thích)
+        List<Reaction> reactions = reactionRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+        List<Post> likedPosts = reactions.stream()
+                .map(Reaction::getPost)
+                .filter(p -> !p.getIsDeleted())
+                .collect(Collectors.toList());
+
         model.addAttribute("user", user);
         model.addAttribute("posts", posts);
         model.addAttribute("purchases", purchases);
         model.addAttribute("itemsByType", itemsByType);
+        model.addAttribute("likedPosts", likedPosts);
         model.addAttribute("totalLikes",
                 posts.stream().mapToInt(Post::getLikesCount).sum());
         model.addAttribute("totalViews",
                 posts.stream().mapToInt(Post::getViews).sum());
         return "profile";
+    }
+
+    // ===== XEM PROFILE PUBLIC =====
+    @GetMapping("/view/{id}")
+    public String viewPublicProfile(@PathVariable Long id, Model model, HttpSession session) {
+        User targetUser = userRepository.findById(id).orElse(null);
+        if (targetUser == null) {
+            return "redirect:/home";
+        }
+
+        User currentUser = getUser(session);
+        // Nếu click vào chính mình, chuyển về trang cá nhân gốc
+        if (currentUser != null && currentUser.getId().equals(id)) {
+            return "redirect:/profile";
+        }
+
+        List<Post> posts = postService.getPostsByUser(id);
+        
+        long totalPosts = postRepository.countByUserIdAndIsDeletedFalse(id);
+        long totalFollowers = followRepository.countByFollowingId(id);
+        long totalFollowing = followRepository.countByFollowerId(id);
+
+        boolean isFollowing = false;
+        if (currentUser != null) {
+            isFollowing = followRepository.existsByFollowerIdAndFollowingId(currentUser.getId(), id);
+        }
+
+        model.addAttribute("targetUser", targetUser);
+        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("posts", posts);
+        model.addAttribute("totalPosts", totalPosts);
+        model.addAttribute("totalFollowers", totalFollowers);
+        model.addAttribute("totalFollowing", totalFollowing);
+        model.addAttribute("isFollowing", isFollowing);
+
+        return "public-profile";
+    }
+
+    // ===== FOLLOW TÀI KHOẢN =====
+    @PostMapping("/follow/{id}")
+    @ResponseBody
+    @org.springframework.transaction.annotation.Transactional
+    public java.util.Map<String, Object> toggleFollow(@PathVariable Long id, HttpSession session) {
+        User currentUser = getUser(session);
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        
+        if (currentUser == null) {
+            response.put("error", "Chưa đăng nhập");
+            return response;
+        }
+
+        if (currentUser.getId().equals(id)) {
+            response.put("error", "Không thể tự follow chính mình");
+            return response;
+        }
+
+        User targetUser = userRepository.findById(id).orElse(null);
+        if (targetUser == null) {
+            response.put("error", "Không tìm thấy user");
+            return response;
+        }
+
+        boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(currentUser.getId(), id);
+
+        if (isFollowing) {
+            followRepository.deleteByFollowerIdAndFollowingId(currentUser.getId(), id);
+            response.put("followed", false);
+        } else {
+            Follow follow = new Follow();
+            follow.setFollower(currentUser);
+            follow.setFollowing(targetUser);
+            followRepository.save(follow);
+            response.put("followed", true);
+        }
+
+        long followersCount = followRepository.countByFollowingId(id);
+        response.put("followersCount", followersCount);
+        
+        return response;
     }
 
     // ===== LẤY AVATAR =====

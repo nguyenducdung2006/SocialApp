@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${targetUser.fullName != null ? targetUser.fullName : targetUser.username} + ' - Profile'"></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/profile.css}">
+</head>
+
+<body>
+    <!-- NAVBAR -->
+    <nav class="top-navbar">
+        <a class="brand" th:href="@{/home}">✦ SocialApp</a>
+        <div class="flex-grow-1"></div>
+        <a th:href="@{/upload}" class="nav-btn upload"><i class="bi bi-cloud-upload me-1"></i>Đăng tải</a>
+        <a th:href="@{/home}" class="nav-back"><i class="bi bi-arrow-left me-1"></i>Trang chủ</a>
+    </nav>
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header" th:classappend="${targetUser.equippedBg != null ? ' has-bg' : ''}"
+        th:attr="data-bg=${targetUser.equippedBg != null ? targetUser.equippedBg : ''}">
+
+        <div class="profile-header-overlay">
+            <div class="profile-top">
+
+                <!-- AVATAR -->
+                <div class="avatar-wrap">
+                    <div class="avatar-frame" th:classappend="${targetUser.equippedFrame != null ? ' has-frame' : ''}"
+                        th:attr="data-frame=${targetUser.equippedFrame != null ?
+                        (#strings.containsIgnoreCase(targetUser.equippedFrame,'galaxy') ? 'galaxy' :
+                         #strings.containsIgnoreCase(targetUser.equippedFrame,'sakura') ? 'sakura' :
+                         #strings.containsIgnoreCase(targetUser.equippedFrame,'gold')   ? 'gold'   : 'default') : ''}">
+                        <img th:if="${targetUser.avatarData != null}"
+                            th:src="@{/profile/avatar/{id}(id=${targetUser.id})}" class="avatar-img" alt="avatar">
+                        <div th:if="${targetUser.avatarData == null}" class="avatar-placeholder"
+                            th:text="${targetUser.username != null ? targetUser.username.substring(0,1).toUpperCase() : 'U'}">
+                            U
+                        </div>
+                    </div>
+                </div>
+
+                <!-- USER INFO -->
+                <div class="profile-info">
+                    <div class="profile-name-wrap">
+                        <h1 class="profile-name" th:classappend="${targetUser.equippedNameFx != null ? ' name-fx' : ''}"
+                            th:text="${targetUser.fullName != null ? targetUser.fullName : targetUser.username}">
+                            Username</h1>
+                        <img th:if="${targetUser.equippedNameFx != null}" th:src="${targetUser.equippedNameFx}"
+                            th:attr="data-badge=${#strings.containsIgnoreCase(targetUser.equippedNameFx,'vip') ? 'vip' : 'artist'}"
+                            class="profile-badge" alt="badge">
+                    </div>
+                    <div class="profile-username">@<span th:text="${targetUser.username}">username</span></div>
+                    <div class="profile-bio" th:text="${targetUser.bio != null ? targetUser.bio : 'Chưa có mô tả'}">Bio
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span class="stat-num" th:text="${totalPosts}">0</span>
+                            <span class="stat-label">Tác phẩm</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-num" id="followerCount" th:text="${totalFollowers}">0</span>
+                            <span class="stat-label">Followers</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-num" th:text="${totalFollowing}">0</span>
+                            <span class="stat-label">Following</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NÚT THEO DÕI -->
+                <button th:if="${currentUser != null and currentUser.id != targetUser.id}"
+                    class="btn rounded-pill px-4 fw-bold"
+                    th:classappend="${isFollowing ? 'btn-secondary' : 'btn-primary'}" id="followBtn"
+                    th:data-id="${targetUser.id}">
+                    <i class="bi" th:classappend="${isFollowing ? 'bi-person-check-fill' : 'bi-person-plus-fill'}"></i>
+                    <span id="followBtnText" th:text="${isFollowing ? ' Đang theo dõi' : ' Theo dõi'}"> Theo dõi</span>
+                </button>
+                <div th:if="${currentUser == null}">
+                    <a th:href="@{/auth/login}" class="btn btn-primary rounded-pill px-4 fw-bold">
+                        <i class="bi bi-person-plus-fill"></i> Đăng nhập
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="profile-tabs">
+        <button class="tab-btn active" data-tab="posts">
+            <i class="bi bi-grid-3x3 me-1"></i>Tác phẩm
+            (<span th:text="${totalPosts}">0</span>)
+        </button>
+    </div>
+
+    <!-- ==================== -->
+    <!-- TAB: POSTS           -->
+    <!-- ==================== -->
+    <div class="tab-content active" id="tab-posts">
+        <div class="content-wrap">
+            <div th:if="${posts == null or posts.empty}" class="empty-state">
+                <i class="bi bi-images"></i>
+                <p>Chưa có tác phẩm nào</p>
+            </div>
+            <div class="posts-grid" th:if="${posts != null and !posts.empty}">
+                <div th:each="post : ${posts}" class="post-card">
+                    <div class="post-img-wrap">
+                        <a th:href="@{/post/{id}(id=${post.id})}">
+                            <img th:if="${post.imageData != null}" th:src="@{/upload/image/{id}(id=${post.id})}"
+                                th:alt="${post.title}" class="post-img">
+                            <img th:if="${post.imageData == null && post.imageUrl != null}" th:src="${post.imageUrl}"
+                                th:alt="${post.title}" class="post-img">
+                        </a>
+                        <div class="post-overlay">
+                            <div class="post-overlay-stats">
+                                <span><i class="bi bi-heart-fill"></i>
+                                    <span th:text="${post.likesCount}">0</span></span>
+                                <span><i class="bi bi-eye-fill"></i>
+                                    <span th:text="${post.views}">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-info">
+                        <a th:href="@{/post/{id}(id=${post.id})}" class="text-decoration-none text-dark">
+                            <div class="post-title" th:text="${post.title}">Tiêu đề</div>
+                        </a>
+                        <div class="post-meta">
+                            <span th:each="tag : ${#strings.arraySplit(post.tags != null ? post.tags : '', ',')}"
+                                th:if="${!#strings.isEmpty(tag)}" class="post-tag"
+                                th:text="'#' + ${#strings.trim(tag)}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const followBtn = document.getElementById('followBtn');
+            if (followBtn) {
+                followBtn.addEventListener('click', function () {
+                    const userId = this.getAttribute('data-id');
+                    fetch('/profile/follow/' + userId, {
+                        method: 'POST'
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            const icon = this.querySelector('i');
+                            const textObj = document.getElementById('followBtnText');
+                            const followerCountObj = document.getElementById('followerCount');
+
+                            if (data.followed) {
+                                this.classList.remove('btn-primary');
+                                this.classList.add('btn-secondary');
+                                icon.classList.remove('bi-person-plus-fill');
+                                icon.classList.add('bi-person-check-fill');
+                                textObj.innerText = ' Đang theo dõi';
+                            } else {
+                                this.classList.remove('btn-secondary');
+                                this.classList.add('btn-primary');
+                                icon.classList.remove('bi-person-check-fill');
+                                icon.classList.add('bi-person-plus-fill');
+                                textObj.innerText = ' Theo dõi';
+                            }
+
+                            followerCountObj.innerText = data.followersCount;
+                        })
+                        .catch(err => {
+                            console.error('Lỗi khi follow:', err);
+                            alert('Có lỗi xảy ra!');
+                        });
+                });
+            }
+
+            // Script cho nền header
+            const header = document.querySelector('.profile-header');
+            const bgAttr = header.getAttribute('data-bg');
+            if (bgAttr && bgAttr.trim() !== '') {
+                header.style.backgroundImage = `url('${bgAttr}')`;
+            }
+        });
+    </script>
+</body>
+
+</html>

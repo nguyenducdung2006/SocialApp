@@ -1,0 +1,221 @@
+/* post-detail.css */
+:root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #21262d;
+    --accent: #e94560;
+    --accent2: #a855f7;
+    --text: #e6edf3;
+    --text-muted: #7d8590;
+    --border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+}
+
+.page-wrapper {
+    min-height: 100vh;
+}
+
+/* Navbar styles bổ sung cho chi tiết bài viết (top-navbar đã lấy từ home.css) */
+.nav-btn-back {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid transparent;
+}
+
+.nav-btn-back:hover {
+    background: var(--bg3);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+/* Main Container */
+.main-container {
+    max-width: 1200px;
+}
+
+/* Image Container */
+.image-container {
+    background-color: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.post-main-img {
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+/* Info Card */
+.post-info-card {
+    background: var(--bg2) !important;
+    border: 1px solid var(--border) !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    color: var(--text);
+}
+
+.post-info-card h2,
+.post-info-card h6,
+.post-info-card h5 {
+    color: var(--text);
+}
+
+.post-info-card p,
+.post-info-card small {
+    color: var(--text-muted) !important;
+}
+
+.post-info-card hr {
+    border-color: var(--border);
+}
+
+/* Tags */
+.badge.bg-light.text-dark {
+    background-color: var(--bg3) !important;
+    color: var(--text-muted) !important;
+    border: 1px solid var(--border) !important;
+    transition: all 0.2s;
+}
+
+.badge.bg-light.text-dark:hover {
+    background-color: var(--accent) !important;
+    color: white !important;
+    border-color: var(--accent) !important;
+}
+
+/* Action buttons */
+.action-btn {
+    transition: transform 0.2s ease-in-out;
+    color: var(--text) !important;
+}
+
+.action-btn:hover {
+    transform: scale(1.1);
+}
+
+.action-btn.text-danger {
+    color: var(--accent) !important;
+}
+
+/* Share & Follow BTN */
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), #c73652);
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(233, 69, 96, 0.4);
+    background: linear-gradient(135deg, var(--accent), #c73652);
+}
+
+.btn-outline-primary {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+/* Dropdown */
+.dropdown-menu {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+}
+
+.dropdown-item {
+    color: var(--text);
+}
+
+.dropdown-item:hover {
+    background: var(--bg2);
+    color: white;
+}
+
+.dropdown-item.text-danger:hover {
+    background: rgba(233, 69, 96, 0.1);
+    color: var(--accent) !important;
+}
+
+.btn-light.rounded-circle {
+    background: var(--bg3) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+
+.btn-light.rounded-circle:hover {
+    background: var(--bg2) !important;
+}
+
+/* Comments */
+.comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+    background: var(--bg2);
+    border-radius: 4px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: var(--bg3);
+    border-radius: 4px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+.comments-list .bg-light {
+    background-color: var(--bg3) !important;
+    border: 1px solid var(--border);
+}
+
+.comments-list .text-dark {
+    color: var(--text) !important;
+}
+
+/* Comment Form */
+.form-control {
+    background-color: var(--bg3) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.form-control:focus {
+    border-color: var(--accent) !important;
+    box-shadow: none;
+}
+
+.mt-3.p-3.bg-light.rounded-4 {
+    background-color: var(--bg) !important;
+    border: 1px solid var(--border);
+}

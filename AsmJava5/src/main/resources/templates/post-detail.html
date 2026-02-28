@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${post.title + ' - Social App'}">Chi tiết Bài viết</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/post-detail.css}">
+</head>
+
+<body
+    th:attr="data-homebg=${currentUser != null and currentUser.equippedHomeBg != null ? currentUser.equippedHomeBg : ''}">
+
+    <!-- Overlay mờ khi có nền -->
+    <div id="homeBgOverlay"
+        style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:0;pointer-events:none;"></div>
+
+    <div class="page-wrapper">
+        <!-- NAVBAR (giống hệt home.html) -->
+        <nav class="top-navbar">
+            <a class="brand" th:href="@{/home}">✦ SocialApp</a>
+            <div class="search-wrap d-none d-md-flex">
+                <form th:action="@{/search}" method="get" class="w-100 position-relative">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="q" class="search-input" placeholder="Tìm kiếm tác phẩm, người dùng...">
+                </form>
+            </div>
+            <div class="nav-spacer"></div>
+            <div class="d-flex align-items-center gap-2">
+                <a th:href="@{/notifications}" th:if="${currentUser != null}" class="nav-icon text-decoration-none">
+                    <i class="bi bi-bell"></i>
+                    <span class="notif-badge">3</span>
+                </a>
+                <a th:href="@{/chat}" th:if="${currentUser != null}" class="nav-icon text-decoration-none">
+                    <i class="bi bi-chat-dots"></i>
+                    <span class="notif-badge">5</span>
+                </a>
+                <a th:href="@{/upload}" class="upload-btn text-decoration-none">
+                    <i class="bi bi-cloud-upload"></i> Đăng tải
+                </a>
+                <a th:href="@{/profile}" th:if="${currentUser != null}" class="text-decoration-none">
+                    <div class="avatar-nav" th:if="${currentUser.avatarData != null}"
+                        style="overflow:hidden;padding:0;">
+                        <img th:src="@{/profile/avatar/{id}(id=${currentUser.id})}"
+                            style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="avatar">
+                    </div>
+                    <div class="avatar-nav" th:if="${currentUser.avatarData == null}"
+                        th:text="${currentUser.username.substring(0,1).toUpperCase()}">U</div>
+                </a>
+                <a th:href="@{/wallet/recharge}" th:if="${currentUser != null}" class="nav-icon text-decoration-none"
+                    title="Nạp tiền">
+                    <i class="bi bi-wallet2"></i>
+                </a>
+                <a th:href="@{/auth/logout}" th:if="${currentUser != null}" class="nav-icon text-decoration-none"
+                    title="Đăng xuất">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
+                <a th:href="@{/auth/login}" th:if="${currentUser == null}" class="nav-icon text-decoration-none"
+                    title="Đăng nhập">
+                    <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                </a>
+            </div>
+        </nav>
+
+        <!-- CONTENT -->
+        <div class="container main-container mt-4 pt-5" style="z-index:1; position:relative;">
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+            <div class="row g-4 justify-content-center">
+                <!-- Cột trái: Ảnh -->
+                <div class="col-lg-7">
+                    <div class="image-container text-center">
+                        <img th:if="${post.imageData != null}" th:src="@{/upload/image/{id}(id=${post.id})}"
+                            class="img-fluid post-main-img shadow-sm" alt="Post Image">
+                        <img th:if="${post.imageData == null && post.imageUrl != null}" th:src="${post.imageUrl}"
+                            class="img-fluid post-main-img shadow-sm" alt="Post Image">
+                    </div>
+                </div>
+
+                <!-- Cột phải: Thông tin -->
+                <div class="col-lg-5">
+                    <div class="post-info-card p-4 shadow-sm rounded-4">
+                        <!-- Tác giả -->
+                        <div class="d-flex align-items-center mb-3 text-dark text-decoration-none">
+                            <a th:href="@{/profile/view/{id}(id=${post.user.id})}"
+                                class="d-flex align-items-center text-dark text-decoration-none flex-grow-1">
+                                <div class="author-avatar me-3"
+                                    style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden;">
+                                    <img th:if="${post.user.avatarData != null}"
+                                        th:src="@{/profile/avatar/{id}(id=${post.user.id})}"
+                                        style="width:100%; height:100%; object-fit:cover;" alt="avatar">
+                                    <div th:if="${post.user.avatarData == null}"
+                                        class="bg-primary text-white d-flex align-items-center justify-content-center w-100 h-100 fw-bold"
+                                        th:text="${post.user.username.substring(0,1).toUpperCase()}"></div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 fw-bold"
+                                        th:text="${post.user.fullName != null ? post.user.fullName : post.user.username}">
+                                        Artist</h6>
+                                    <small class="text-muted" th:text="'@' + ${post.user.username}">@artist</small>
+                                </div>
+                            </a>
+                            <div>
+                                <button th:if="${!isOwner}"
+                                    class="btn btn-sm rounded-pill px-3 fw-bold detail-follow-btn"
+                                    th:classappend="${isFollowing} ? 'btn-secondary text-white' : 'btn-outline-primary'"
+                                    th:data-id="${post.user.id}" th:text="${isFollowing ? 'Đã theo dõi' : 'Theo dõi'}">
+                                    Theo dõi
+                                </button>
+                                <div th:if="${isOwner}" class="dropdown">
+                                    <button class="btn btn-light btn-sm rounded-circle" type="button"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                                        <li><a class="dropdown-item" th:href="@{/post/{id}/edit(id=${post.id})}"><i
+                                                    class="bi bi-pencil me-2 text-warning"></i> Chỉnh sửa</a></li>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <form th:action="@{/post/{id}/delete(id=${post.id})}" method="post"
+                                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
+                                                <button type="submit" class="dropdown-item text-danger"><i
+                                                        class="bi bi-trash3 me-2"></i> Xóa bài</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tiêu đề & Mô tả -->
+                        <h2 class="fw-bold mb-2 h4" th:text="${post.title}">Tiêu đề</h2>
+                        <p class="text-muted mb-3" th:text="${post.description}" style="white-space: pre-line;">Mô tả...
+                        </p>
+
+                        <!-- Tags -->
+                        <div class="mb-4">
+                            <span th:each="tag : ${#strings.arraySplit(post.tags != null ? post.tags : '', ',')}"
+                                th:if="${!#strings.isEmpty(tag)}" class="badge bg-light text-dark border me-1 fs-6"
+                                th:text="'#' + ${#strings.trim(tag)}">#tag</span>
+                        </div>
+
+                        <hr>
+
+                        <!-- Stats & Actions -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="d-flex gap-4">
+                                <!-- Like -->
+                                <button class="btn border-0 p-0 text-dark action-btn" id="likeBtn"
+                                    th:data-id="${post.id}" th:classappend="${isReacted ? ' text-danger' : ''}">
+                                    <i class="fs-4" th:classappend="${isReacted ? 'bi-heart-fill' : 'bi-heart'}"></i>
+                                    <span class="ms-1 fw-bold fs-5" id="likesCount"
+                                        th:text="${post.likesCount}">0</span>
+                                </button>
+                                <!-- View (read-only) -->
+                                <div class="text-muted d-flex align-items-center">
+                                    <i class="bi bi-eye fs-4"></i>
+                                    <span class="ms-1 fw-bold fs-5" th:text="${post.views}">0</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <!-- Report -->
+                                <button th:if="${!isOwner && currentUser != null}" class="btn btn-light rounded-circle"
+                                    title="Báo cáo" th:onclick="'reportPost(' + ${post.id} + ')'">
+                                    <i class="bi bi-flag"></i>
+                                </button>
+                                <!-- Lưu (Bookmark) -->
+                                <button th:if="${currentUser != null}" id="saveBtn" th:data-id="${post.id}"
+                                    class="btn rounded-circle"
+                                    th:classappend="${isSaved ? 'btn-warning text-dark' : 'btn-light'}"
+                                    title="Lưu tác phẩm">
+                                    <i class="bi" th:classappend="${isSaved ? 'bi-bookmark-fill' : 'bi-bookmark'}"></i>
+                                </button>
+                                <!-- Share -->
+                                <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="copyLink()">
+                                    <i class="bi bi-share me-1"></i> Chia sẻ
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Comments -->
+                        <h5 class="fw-bold mb-3 d-flex align-items-center">
+                            <i class="bi bi-chat-text me-2"></i> Bình luận (<span th:text="${comments.size()}">0</span>)
+                        </h5>
+
+                        <div class="comments-list pe-2" style="max-height: 400px; overflow-y: auto;">
+                            <div th:if="${comments.isEmpty()}" class="text-center text-muted my-4">
+                                Chưa có bình luận nào. Hãy là người đầu tiên bóc tem!
+                            </div>
+
+                            <div th:each="c : ${comments}" class="d-flex mb-3">
+                                <div class="author-avatar me-2 flex-shrink-0"
+                                    style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden;">
+                                    <img th:if="${c.user.avatarData != null}"
+                                        th:src="@{/profile/avatar/{id}(id=${c.user.id})}"
+                                        style="width:100%; height:100%; object-fit:cover;" alt="avatar">
+                                    <div th:if="${c.user.avatarData == null}"
+                                        class="bg-secondary text-white d-flex align-items-center justify-content-center w-100 h-100 fw-bold fs-6"
+                                        th:text="${c.user.username.substring(0,1).toUpperCase()}"></div>
+                                </div>
+                                <div class="bg-light p-2 rounded-3 flex-grow-1 position-relative">
+                                    <h6 class="mb-1 fw-bold fs-6 d-flex justify-content-between align-items-center">
+                                        <span
+                                            th:text="${c.user.fullName != null ? c.user.fullName : c.user.username}">User</span>
+                                        <small class="text-muted ms-2 fw-normal"
+                                            th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}">Date</small>
+                                    </h6>
+                                    <p class="mb-0 text-dark" th:text="${c.content}" style="font-size: 0.95rem;">Nội
+                                        dung</p>
+
+                                    <!-- Nút xóa comment -->
+                                    <form th:if="${currentUser != null && (currentUser.id == c.user.id || isOwner)}"
+                                        th:action="@{/comment/{id}/delete(id=${c.id})}" method="post"
+                                        onsubmit="return confirm('Xóa bình luận này?')" class="position-absolute"
+                                        style="top: 8px; right: -25px;">
+                                        <button type="submit" class="btn btn-link text-danger p-0" title="Xóa">
+                                            <i class="bi bi-x-circle-fill"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form viết bình luận -->
+                        <div class="mt-3 p-3 bg-light rounded-4">
+                            <div th:if="${currentUser == null}" class="text-center">
+                                Vui lòng <a th:href="@{/auth/login}" class="fw-bold">Đăng nhập</a> để bình luận.
+                            </div>
+                            <form th:if="${currentUser != null}" th:action="@{/post/{id}/comment(id=${post.id})}"
+                                method="post">
+                                <div class="d-flex gap-2">
+                                    <div class="author-avatar flex-shrink-0"
+                                        style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;">
+                                        <img th:if="${currentUser.avatarData != null}"
+                                            th:src="@{/profile/avatar/{id}(id=${currentUser.id})}"
+                                            style="width:100%; height:100%; object-fit:cover;" alt="avatar">
+                                        <div th:if="${currentUser.avatarData == null}"
+                                            class="bg-primary text-white d-flex align-items-center justify-content-center w-100 h-100 fw-bold"
+                                            th:text="${currentUser.username.substring(0,1).toUpperCase()}"></div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <textarea name="content" class="form-control rounded-3 shadow-none" rows="2"
+                                            placeholder="Thêm bình luận..." required></textarea>
+                                    </div>
+                                    <button type="submit"
+                                        class="btn btn-primary rounded-circle align-self-end shadow-sm"
+                                        style="width: 42px; height: 42px;">
+                                        <i class="bi bi-send-fill ms-1"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/post-detail.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const followBtn = document.querySelector('.detail-follow-btn');
+            if (followBtn) {
+                followBtn.addEventListener('click', function () {
+                    const userId = this.getAttribute('data-id');
+                    fetch('/profile/follow/' + userId, {
+                        method: 'POST'
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.error) {
+                                alert(data.error);
+                                return;
+                            }
+                            if (data.followed) {
+                                this.innerText = 'Đã theo dõi';
+                                this.classList.remove('btn-outline-primary');
+                                this.classList.add('btn-secondary', 'text-white');
+                            } else {
+                                this.innerText = 'Theo dõi';
+                                this.classList.remove('btn-secondary', 'text-white');
+                                this.classList.add('btn-outline-primary');
+                            }
+                        })
+                        .catch(e => console.error(e));
+                });
+            }
+        });
+
+        function copyLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Đã sao chép liên kết vào clipboard!');
+            });
+        }
+
+        // Like logic
+        document.getElementById('likeBtn').addEventListener('click', function () {
+            const postId = this.getAttribute('data-id');
+            fetch(`/post/${postId}/react`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.reacted === true || data.reacted === false) {
+                        // Update UI
+                        const icon = this.querySelector('i');
+                        const count = document.getElementById('likesCount');
+                        count.innerText = data.count;
+                        if (data.reacted) {
+                            this.classList.add('text-danger');
+                            icon.classList.remove('bi-heart');
+                            icon.classList.add('bi-heart-fill');
+                        } else {
+                            this.classList.remove('text-danger');
+                            icon.classList.remove('bi-heart-fill');
+                            icon.classList.add('bi-heart');
+                        }
+                    } else {
+                        alert(data); // If user not logged in, fetch returns text but we called res.json(). Need to handle better.
+                    }
+                }).catch(err => {
+                    if (err instanceof SyntaxError) {
+                        window.location.href = '/auth/login';
+                    }
+                });
+        });
+
+        function reportPost(postId) {
+            let reason = prompt("Nhập lý do báo cáo bài viết này:");
+            if (reason && reason.trim()) {
+                fetch(`/post/${postId}/report`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ reason: reason })
+                })
+                    .then(async res => {
+                        const text = await res.text();
+                        if (res.ok) alert("Báo cáo thành công: " + text);
+                        else {
+                            if (res.status === 401) window.location.href = '/auth/login';
+                            else alert("Lỗi: " + text);
+                        }
+                    });
+            }
+        }
+
+        // JS Fetch cho nút Bookmark/Lưu
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function () {
+                const postId = this.getAttribute('data-id');
+                fetch(`/post/${postId}/save`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                })
+                    .then(res => {
+                        if (res.status === 401) {
+                            window.location.href = '/auth/login';
+                            throw new Error("Unauthorized");
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        const icon = this.querySelector('i');
+                        if (data.saved) {
+                            this.classList.replace('btn-light', 'btn-warning');
+                            this.classList.add('text-dark');
+                            icon.classList.replace('bi-bookmark', 'bi-bookmark-fill');
+                        } else {
+                            this.classList.replace('btn-warning', 'btn-light');
+                            this.classList.remove('text-dark');
+                            icon.classList.replace('bi-bookmark-fill', 'bi-bookmark');
+                        }
+                    })
+                    .catch(err => console.error(err));
+            });
+        }
+    </script>
+</body>
+
+</html>

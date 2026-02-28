@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa Bài viết</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <link rel="stylesheet" th:href="@{/css/post-detail.css}">
+    <style>
+        .edit-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg2);
+            color: var(--text);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .form-label {
+            color: var(--text);
+        }
+
+        .form-control {
+            background-color: var(--bg3) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text) !important;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 0.25rem rgba(233, 69, 96, 0.25) !important;
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR (giống hệt trang chi tiết) -->
+    <nav class="top-navbar mb-5">
+        <a class="brand" th:href="@{/home}">✦ SocialApp</a>
+        <div class="search-wrap d-none d-md-flex">
+            <form th:action="@{/search}" method="get" class="w-100 position-relative">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" class="search-input" placeholder="Tìm kiếm tác phẩm, người dùng...">
+            </form>
+        </div>
+        <div class="nav-spacer"></div>
+        <div class="d-flex align-items-center gap-2">
+            <a th:href="@{/post/{id}(id=${post.id})}"
+                class="btn btn-outline-light rounded-pill px-4 text-decoration-none">
+                <i class="bi bi-x-lg me-1"></i> Đóng
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-5 pt-4">
+        <div class="edit-container">
+            <h3 class="fw-bold mb-4 d-flex align-items-center">
+                <i class="bi bi-pencil-square me-3 text-warning fs-2"></i> Chỉnh sửa Bài viết
+            </h3>
+
+            <form th:action="@{/post/{id}/edit(id=${post.id})}" method="post" enctype="multipart/form-data">
+
+                <!-- Tiêu đề -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Tiêu đề <span class="text-danger">*</span></label>
+                    <input type="text" name="title" class="form-control rounded-3 text-light" th:value="${post.title}"
+                        required>
+                </div>
+
+                <!-- Mô tả -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Mô tả</label>
+                    <textarea name="description" class="form-control rounded-3 text-light" rows="5"
+                        th:text="${post.description}"></textarea>
+                </div>
+
+                <!-- Tags -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Tags <small class="text-muted fw-normal">(cách nhau bởi dấu
+                            phẩy)</small></label>
+                    <input type="text" name="tags" class="form-control rounded-3 text-light" th:value="${post.tags}"
+                        placeholder="Ví dụ: art, design, anime">
+                </div>
+
+                <!-- Hình ảnh hiện tại -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold d-block">Hình ảnh hiện tại</label>
+                    <div class="p-3 rounded-4 mt-2"
+                        style="background: var(--bg3); border: 1px dashed var(--border); text-align: center;">
+                        <img th:if="${post.imageData != null}" th:src="@{/upload/image/{id}(id=${post.id})}"
+                            class="preview-img shadow-sm" alt="Current Image">
+                        <img th:if="${post.imageData == null && post.imageUrl != null}" th:src="${post.imageUrl}"
+                            class="preview-img shadow-sm" alt="Current Image">
+                    </div>
+                </div>
+
+                <!-- Đổi ảnh -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold mt-2">Tải ảnh mới <small class="text-muted fw-normal">(nếu muốn
+                            thay đổi)</small></label>
+                    <input type="file" name="image" class="form-control rounded-3" accept="image/*">
+                </div>
+
+                <hr class="my-4" style="border-color: var(--border);">
+
+                <div class="d-flex justify-content-end gap-3">
+                    <a th:href="@{/post/{id}(id=${post.id})}" class="btn btn-light rounded-pill px-4 fw-bold text-dark"
+                        style="background-color: #e6edf3;">Hủy</a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow">
+                        <i class="bi bi-save me-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

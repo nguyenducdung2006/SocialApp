@@ -17,4 +17,8 @@ public interface ReactionRepository extends JpaRepository<Reaction, Long> {
     void deleteByPostIdAndUserId(Long postId, Long userId);
 
     long countByPostId(Long postId);
+
+    // Lấy danh sách Reaction (Yêu thích) của một người dùng
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"post", "post.user"})
+    java.util.List<Reaction> findByUserIdOrderByCreatedAtDesc(Long userId);
 }

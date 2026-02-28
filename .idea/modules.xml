@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/AsmJava5.iml" filepath="$PROJECT_DIR$/.idea/AsmJava5.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AsmJava5/AsmJava5.iml" filepath="$PROJECT_DIR$/AsmJava5/AsmJava5.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SocialApp.iml" filepath="$PROJECT_DIR$/.idea/SocialApp.iml" />
     </modules>
   </component>
 </project>

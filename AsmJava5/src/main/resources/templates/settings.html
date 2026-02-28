@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài đặt - Social App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
+    <style>
+        body {
+            background: #0d0d0d;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .settings-container {
+            max-width: 700px;
+            margin: 80px auto;
+            padding: 0 16px 60px;
+        }
+
+        .settings-header {
+            margin-bottom: 32px;
+        }
+
+        .settings-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .settings-header p {
+            color: #888;
+            margin: 0;
+        }
+
+        .setting-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .setting-card:hover {
+            border-color: #444;
+        }
+
+        .setting-card.danger {
+            border-color: #4a1a1a;
+        }
+
+        .setting-card.danger:hover {
+            border-color: #e91e63;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .badge-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .card-title .badge-blue {
+            background: rgba(33, 150, 243, 0.15);
+            color: #2196f3;
+        }
+
+        .card-title .badge-green {
+            background: rgba(76, 175, 80, 0.15);
+            color: #4caf50;
+        }
+
+        .card-title .badge-red {
+            background: rgba(233, 30, 99, 0.15);
+            color: #e91e63;
+        }
+
+        .card-desc {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .form-control-dark {
+            background: #111;
+            border: 1px solid #333;
+            color: #eee;
+            border-radius: 10px;
+            padding: 10px 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control-dark:focus {
+            outline: none;
+            border-color: #e91e63;
+            background: #111;
+            color: #fff;
+            box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+        }
+
+        .form-control-dark::placeholder {
+            color: #555;
+        }
+
+        .btn-save {
+            background: #e91e63;
+            border: none;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-save:hover {
+            background: #c2185b;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger-custom {
+            background: transparent;
+            border: 1px solid #e91e63;
+            color: #e91e63;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-danger-custom:hover {
+            background: #e91e63;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .alert-custom {
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .alert-success-custom {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4caf50;
+            color: #4caf50;
+        }
+
+        .alert-error-custom {
+            background: rgba(233, 30, 99, 0.1);
+            border: 1px solid #e91e63;
+            color: #e91e63;
+        }
+
+        label {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .back-btn {
+            color: #888;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar-custom">
+        <a th:href="@{/home}" class="brand text-decoration-none">
+            <span class="brand-icon">✦</span> SocialApp
+        </a>
+        <div class="d-flex align-items-center gap-3">
+            <a th:href="@{/profile/view/{id}(id=${currentUser.id})}" class="nav-icon text-decoration-none"
+                title="Hồ sơ">
+                <div class="avatar-nav" th:if="${currentUser != null and currentUser.avatarData != null}"
+                    style="padding:0;overflow:hidden;">
+                    <img th:src="@{/profile/avatar/{id}(id=${currentUser.id})}"
+                        style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="avatar">
+                </div>
+                <div class="avatar-nav" th:if="${currentUser == null or currentUser.avatarData == null}"
+                    th:text="${currentUser != null ? currentUser.username.substring(0,1).toUpperCase() : 'U'}">U</div>
+            </a>
+            <a th:href="@{/auth/logout}" class="nav-icon text-decoration-none" title="Đăng xuất">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="settings-container">
+
+        <a th:href="@{/home}" class="back-btn">
+            <i class="bi bi-arrow-left"></i> Quay về trang chủ
+        </a>
+
+        <div class="settings-header">
+            <h1><i class="bi bi-gear-fill me-2" style="color:#e91e63;"></i>Cài đặt tài khoản</h1>
+            <p>Quản lý thông tin và bảo mật tài khoản của bạn</p>
+        </div>
+
+        <!-- ĐỔI MẬT KHẨU -->
+        <div class="setting-card">
+            <div class="card-title">
+                <span class="badge-icon badge-blue"><i class="bi bi-lock-fill"></i></span>
+                Đổi mật khẩu
+            </div>
+            <p class="card-desc">Để bảo mật tài khoản, vui lòng nhập mật khẩu hiện tại trước khi đặt mật khẩu mới.</p>
+
+            <div th:if="${successPassword}" class="alert-custom alert-success-custom">
+                <i class="bi bi-check-circle me-2"></i><span th:text="${successPassword}"></span>
+            </div>
+            <div th:if="${errorPassword}" class="alert-custom alert-error-custom">
+                <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorPassword}"></span>
+            </div>
+
+            <form th:action="@{/settings/change-password}" method="post">
+                <div class="mb-3">
+                    <label>Mật khẩu hiện tại *</label>
+                    <input type="password" name="currentPassword" class="form-control form-control-dark"
+                        placeholder="Nhập mật khẩu hiện tại" required>
+                </div>
+                <div class="mb-3">
+                    <label>Mật khẩu mới *</label>
+                    <input type="password" name="newPassword" class="form-control form-control-dark"
+                        placeholder="Ít nhất 6 ký tự" required>
+                </div>
+                <div class="mb-3">
+                    <label>Xác nhận mật khẩu mới *</label>
+                    <input type="password" name="confirmPassword" class="form-control form-control-dark"
+                        placeholder="Nhập lại mật khẩu mới" required>
+                </div>
+                <button type="submit" class="btn btn-save">
+                    <i class="bi bi-check2 me-2"></i>Cập nhật mật khẩu
+                </button>
+            </form>
+        </div>
+
+        <!-- ĐỔI EMAIL -->
+        <div class="setting-card">
+            <div class="card-title">
+                <span class="badge-icon badge-green"><i class="bi bi-envelope-fill"></i></span>
+                Đổi email
+            </div>
+            <p class="card-desc">Email hiện tại của bạn là <strong th:text="${currentUser.email}"
+                    style="color:#eee;"></strong>. Nhập mật khẩu để xác nhận thay đổi.</p>
+
+            <div th:if="${successEmail}" class="alert-custom alert-success-custom">
+                <i class="bi bi-check-circle me-2"></i><span th:text="${successEmail}"></span>
+            </div>
+            <div th:if="${errorEmail}" class="alert-custom alert-error-custom">
+                <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorEmail}"></span>
+            </div>
+
+            <form th:action="@{/settings/change-email}" method="post">
+                <div class="mb-3">
+                    <label>Mật khẩu hiện tại *</label>
+                    <input type="password" name="currentPassword" class="form-control form-control-dark"
+                        placeholder="Xác nhận danh tính" required>
+                </div>
+                <div class="mb-3">
+                    <label>Email mới *</label>
+                    <input type="email" name="newEmail" class="form-control form-control-dark"
+                        placeholder="Nhập email mới" required>
+                </div>
+                <button type="submit" class="btn btn-save">
+                    <i class="bi bi-check2 me-2"></i>Cập nhật email
+                </button>
+            </form>
+        </div>
+
+        <!-- XÓA TÀI KHOẢN -->
+        <div class="setting-card danger">
+            <div class="card-title" style="color:#e91e63;">
+                <span class="badge-icon badge-red"><i class="bi bi-trash-fill"></i></span>
+                Xóa tài khoản
+            </div>
+            <p class="card-desc">⚠️ Hành động này <strong style="color:#e91e63;">không thể hoàn tác</strong>. Tài khoản
+                của bạn sẽ bị vô hiệu hóa vĩnh viễn. Tất cả dữ liệu sẽ bị ẩn.</p>
+
+            <div th:if="${errorDelete}" class="alert-custom alert-error-custom">
+                <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorDelete}"></span>
+            </div>
+
+            <form th:action="@{/settings/delete-account}" method="post"
+                onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác!')">
+                <div class="mb-3">
+                    <label>Nhập mật khẩu để xác nhận *</label>
+                    <input type="password" name="currentPassword" class="form-control form-control-dark"
+                        placeholder="Mật khẩu hiện tại" required>
+                </div>
+                <button type="submit" class="btn btn-danger-custom">
+                    <i class="bi bi-trash me-2"></i>Xóa tài khoản vĩnh viễn
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
