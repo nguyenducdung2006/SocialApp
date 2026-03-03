@@ -36,8 +36,9 @@
                     <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
                 </a>
                 <a th:href="@{/chat}" th:if="${currentUser != null and currentUser.role != 'ADMIN'}"
-                    class="nav-icon text-decoration-none">
+                    class="nav-icon text-decoration-none" id="chatNavIcon">
                     <i class="bi bi-chat-dots"></i>
+                    <span class="notif-badge" id="msgBadge" style="display:none;background:#a855f7;"></span>
                 </a>
                 <a th:href="@{/upload}" th:if="${currentUser == null or currentUser.role != 'ADMIN'}"
                     class="upload-btn text-decoration-none">
@@ -438,6 +439,22 @@
         fetch('/api/notifications/count')
             .then(r => r.json())
             .then(d => updateBadge(d.count || 0))
+            .catch(() => { });
+
+        // ===== MESSAGE BADGE =====
+        const msgBadge = document.getElementById('msgBadge');
+        function updateMsgBadge(count) {
+            if (!msgBadge) return;
+            if (count > 0) {
+                msgBadge.textContent = count > 99 ? '99+' : count;
+                msgBadge.style.display = '';
+            } else {
+                msgBadge.style.display = 'none';
+            }
+        }
+        fetch('/chat/unread-count')
+            .then(r => r.json())
+            .then(d => updateMsgBadge(d.count || 0))
             .catch(() => { });
 
         // ===== WEBSOCKET STOMP =====

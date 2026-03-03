@@ -38,8 +38,9 @@
                     <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
                 </a>
                 <a th:href="@{/chat}" th:if="${sessionUser == null or sessionUser.role != 'ADMIN'}"
-                    class="nav-icon text-decoration-none">
+                    class="nav-icon text-decoration-none" id="chatNavIcon">
                     <i class="bi bi-chat-dots"></i>
+                    <span class="notif-badge" id="msgBadge" style="display:none;background:#a855f7;"></span>
                 </a>
                 <!-- Admin Dashboard Link -->
                 <a th:if="${sessionUser != null and sessionUser.role == 'ADMIN'}" th:href="@{/admin/reports}"
@@ -83,11 +84,7 @@
                     <a th:href="@{/trending}" class="sidebar-link">
                         <i class="bi bi-fire"></i> Xu hướng
                     </a>
-                    <a th:if="${sessionUser != null and sessionUser.role != 'ADMIN'}" th:href="@{/profile#tab-likes}"
-                        class="sidebar-link">
-                        <i class="bi bi-heart-fill"></i> Đã thích
-                    </a>
-                    <a th:if="${sessionUser != null and sessionUser.role != 'ADMIN'}" th:href="@{/profile#tab-saved}"
+                    <a th:if="${sessionUser != null and sessionUser.role != 'ADMIN'}" th:href="@{/saved}"
                         class="sidebar-link">
                         <i class="bi bi-bookmark-fill"></i> Đã lưu
                     </a>
@@ -321,6 +318,22 @@
         fetch('/api/notifications/count')
             .then(r => r.json())
             .then(d => updateBadge(d.count || 0))
+            .catch(() => { });
+
+        // ===== MESSAGE BADGE =====
+        const msgBadge = document.getElementById('msgBadge');
+        function updateMsgBadge(count) {
+            if (!msgBadge) return;
+            if (count > 0) {
+                msgBadge.textContent = count > 99 ? '99+' : count;
+                msgBadge.style.display = '';
+            } else {
+                msgBadge.style.display = 'none';
+            }
+        }
+        fetch('/chat/unread-count')
+            .then(r => r.json())
+            .then(d => updateMsgBadge(d.count || 0))
             .catch(() => { });
 
         // ===== WEBSOCKET STOMP =====

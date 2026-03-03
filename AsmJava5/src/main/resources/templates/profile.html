@@ -174,7 +174,7 @@
                         </a>
                     </div>
                     <div class="post-info">
-                        <a th:href="@{/post/{id}(id=${post.id})}" class="text-decoration-none text-dark">
+                        <a th:href="@{/post/{id}(id=${post.id})}" class="text-decoration-none text-light">
                             <div class="post-title" th:text="${post.title}">Tiêu đề</div>
                         </a>
                         <div class="post-meta">
@@ -219,12 +219,12 @@
                         </a>
                     </div>
                     <div class="post-info">
-                        <a th:href="@{/post/{id}(id=${post.id})}" class="text-decoration-none text-dark">
+                        <a th:href="@{/post/{id}(id=${post.id})}" class="text-decoration-none text-light">
                             <div class="post-title" th:text="${post.title}">Tiêu đề</div>
                         </a>
                         <div class="post-meta">
-                            <a th:href="@{/profile/view/{id}(id=${post.user.id})}"
-                                class="text-decoration-none text-muted">
+                            <a th:href="@{/profile/view/{id}(id=${post.user.id})}" class="text-decoration-none"
+                                style="color:#94a3b8;">
                                 <span th:text="'@' + ${post.user.username}">@user</span>
                             </a>
                         </div>
