@@ -46,22 +46,26 @@ public class SettingsController {
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             ra.addFlashAttribute("errorPassword", "Mật khẩu hiện tại không đúng!");
+            ra.addFlashAttribute("activePanel", "password");
             return "redirect:/settings";
         }
 
         if (!newPassword.equals(confirmPassword)) {
             ra.addFlashAttribute("errorPassword", "Mật khẩu mới không khớp!");
+            ra.addFlashAttribute("activePanel", "password");
             return "redirect:/settings";
         }
 
         if (newPassword.length() < 6) {
             ra.addFlashAttribute("errorPassword", "Mật khẩu mới phải có ít nhất 6 ký tự!");
+            ra.addFlashAttribute("activePanel", "password");
             return "redirect:/settings";
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         ra.addFlashAttribute("successPassword", "Đổi mật khẩu thành công!");
+        ra.addFlashAttribute("activePanel", "password");
         return "redirect:/settings";
     }
 
@@ -79,11 +83,13 @@ public class SettingsController {
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             ra.addFlashAttribute("errorEmail", "Mật khẩu hiện tại không đúng!");
+            ra.addFlashAttribute("activePanel", "email");
             return "redirect:/settings";
         }
 
         if (userRepository.findByEmail(newEmail).isPresent()) {
             ra.addFlashAttribute("errorEmail", "Email này đã được sử dụng bởi tài khoản khác!");
+            ra.addFlashAttribute("activePanel", "email");
             return "redirect:/settings";
         }
 
@@ -91,6 +97,7 @@ public class SettingsController {
         userRepository.save(user);
         session.setAttribute("email", newEmail);
         ra.addFlashAttribute("successEmail", "Đổi email thành công!");
+        ra.addFlashAttribute("activePanel", "email");
         return "redirect:/settings";
     }
 
@@ -107,6 +114,7 @@ public class SettingsController {
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             ra.addFlashAttribute("errorDelete", "Mật khẩu không đúng! Xóa tài khoản thất bại.");
+            ra.addFlashAttribute("activePanel", "delete");
             return "redirect:/settings";
         }
 

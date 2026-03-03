@@ -45,6 +45,9 @@ public class User {
     @Column(name = "ban_until")
     private LocalDateTime banUntil;
 
+    @Column(name = "warning_count")
+    private Integer warningCount = 0;
+
     private String role = "USER";
 
     @Column(name = "equipped_frame", columnDefinition = "NVARCHAR(MAX)")

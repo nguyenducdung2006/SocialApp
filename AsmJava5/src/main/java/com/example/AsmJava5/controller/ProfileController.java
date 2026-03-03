@@ -2,6 +2,7 @@ package com.example.AsmJava5.controller;
 
 import com.example.AsmJava5.model.*;
 import com.example.AsmJava5.repository.*;
+import com.example.AsmJava5.service.NotificationService;
 import com.example.AsmJava5.service.PostService;
 import com.example.AsmJava5.service.ShopService;
 import jakarta.servlet.http.HttpSession;
@@ -30,6 +31,7 @@ public class ProfileController {
     private final PostRepository postRepository;
     private final FollowRepository followRepository;
     private final ReactionRepository reactionRepository;
+    private final NotificationService notificationService;
 
     private User getUser(HttpSession session) {
         String email = (String) session.getAttribute("email");
@@ -85,6 +87,7 @@ public class ProfileController {
                 posts.stream().mapToInt(Post::getLikesCount).sum());
         model.addAttribute("totalViews",
                 posts.stream().mapToInt(Post::getViews).sum());
+        model.addAttribute("isOwnProfile", true);
         return "profile";
     }
 
@@ -127,44 +130,67 @@ public class ProfileController {
     // ===== FOLLOW TÀI KHOẢN =====
     @PostMapping("/follow/{id}")
     @ResponseBody
-    @org.springframework.transaction.annotation.Transactional
     public java.util.Map<String, Object> toggleFollow(@PathVariable Long id, HttpSession session) {
-        User currentUser = getUser(session);
         java.util.Map<String, Object> response = new java.util.HashMap<>();
-        
-        if (currentUser == null) {
-            response.put("error", "Chưa đăng nhập");
-            return response;
+        try {
+            User currentUser = getUser(session);
+
+            if (currentUser == null) {
+                response.put("error", "Chưa đăng nhập");
+                return response;
+            }
+            if (currentUser.getId().equals(id)) {
+                response.put("error", "Không thể tự follow chính mình");
+                return response;
+            }
+            User targetUser = userRepository.findById(id).orElse(null);
+            if (targetUser == null) {
+                response.put("error", "Không tìm thấy user");
+                return response;
+            }
+
+            boolean sendNotification = false;
+
+            boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(currentUser.getId(), id);
+            if (isFollowing) {
+                doUnfollow(currentUser.getId(), id);
+                response.put("followed", false);
+            } else {
+                try {
+                    doFollow(currentUser, targetUser);
+                    response.put("followed", true);
+                    sendNotification = true;
+                } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                    response.put("followed", true);
+                }
+            }
+
+            long followersCount = followRepository.countByFollowingId(id);
+            response.put("followersCount", followersCount);
+
+            // Gửi notification sau khi transaction DB hoàn tất
+            if (sendNotification) {
+                try {
+                    notificationService.notifyFollow(currentUser, targetUser);
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception e) {
+            response.put("error", "Có lỗi xảy ra: " + e.getMessage());
         }
-
-        if (currentUser.getId().equals(id)) {
-            response.put("error", "Không thể tự follow chính mình");
-            return response;
-        }
-
-        User targetUser = userRepository.findById(id).orElse(null);
-        if (targetUser == null) {
-            response.put("error", "Không tìm thấy user");
-            return response;
-        }
-
-        boolean isFollowing = followRepository.existsByFollowerIdAndFollowingId(currentUser.getId(), id);
-
-        if (isFollowing) {
-            followRepository.deleteByFollowerIdAndFollowingId(currentUser.getId(), id);
-            response.put("followed", false);
-        } else {
-            Follow follow = new Follow();
-            follow.setFollower(currentUser);
-            follow.setFollowing(targetUser);
-            followRepository.save(follow);
-            response.put("followed", true);
-        }
-
-        long followersCount = followRepository.countByFollowingId(id);
-        response.put("followersCount", followersCount);
-        
         return response;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    protected void doFollow(User follower, User following) {
+        Follow follow = new Follow();
+        follow.setFollower(follower);
+        follow.setFollowing(following);
+        followRepository.save(follow);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    protected void doUnfollow(Long followerId, Long followingId) {
+        followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
     }
 
     // ===== LẤY AVATAR =====

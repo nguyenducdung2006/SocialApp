@@ -15,107 +15,148 @@
             min-height: 100vh;
         }
 
-        .settings-container {
-            max-width: 700px;
-            margin: 80px auto;
-            padding: 0 16px 60px;
+        .settings-layout {
+            max-width: 900px;
+            margin: 80px auto 60px;
+            padding: 0 16px;
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
         }
 
-        .settings-header {
-            margin-bottom: 32px;
+        /* SIDEBAR */
+        .settings-sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 80px;
         }
 
-        .settings-header h1 {
-            font-size: 2rem;
+        .settings-sidebar h2 {
+            font-size: 1rem;
             font-weight: 700;
+            color: #fff;
+            padding: 0 12px 12px;
+            border-bottom: 1px solid #222;
+            margin-bottom: 8px;
+        }
+
+        .settings-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: #aaa;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.15s;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 4px;
+        }
+
+        .settings-menu-item:hover {
+            background: #1a1a1a;
             color: #fff;
         }
 
-        .settings-header p {
-            color: #888;
-            margin: 0;
+        .settings-menu-item.active {
+            background: rgba(233, 30, 99, 0.12);
+            color: #e91e63;
         }
 
-        .setting-card {
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 16px;
-            padding: 28px;
-            margin-bottom: 20px;
-            transition: border-color 0.2s;
+        .settings-menu-item.active i {
+            color: #e91e63;
         }
 
-        .setting-card:hover {
-            border-color: #444;
+        .settings-menu-item i {
+            font-size: 1rem;
+            width: 18px;
+            text-align: center;
         }
 
-        .setting-card.danger {
-            border-color: #4a1a1a;
+        .menu-danger.active {
+            background: rgba(233, 30, 99, 0.12);
+            color: #e91e63;
         }
 
-        .setting-card.danger:hover {
-            border-color: #e91e63;
+        .menu-danger:hover {
+            color: #e91e63 !important;
         }
 
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
+        /* PANELS */
+        .settings-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .settings-panel {
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .panel-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
             margin-bottom: 6px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .card-title .badge-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
+        .panel-desc {
+            color: #777;
+            font-size: 0.875rem;
+            margin-bottom: 24px;
         }
 
-        .card-title .badge-blue {
-            background: rgba(33, 150, 243, 0.15);
-            color: #2196f3;
+        .setting-card {
+            background: #141414;
+            border: 1px solid #222;
+            border-radius: 14px;
+            padding: 28px;
+            transition: border-color 0.2s;
         }
 
-        .card-title .badge-green {
-            background: rgba(76, 175, 80, 0.15);
-            color: #4caf50;
-        }
-
-        .card-title .badge-red {
-            background: rgba(233, 30, 99, 0.15);
-            color: #e91e63;
-        }
-
-        .card-desc {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
+        .setting-card.danger {
+            border-color: #3a1010;
         }
 
         .form-control-dark {
-            background: #111;
-            border: 1px solid #333;
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
             color: #eee;
             border-radius: 10px;
             padding: 10px 14px;
+            width: 100%;
             transition: border-color 0.2s;
         }
 
         .form-control-dark:focus {
             outline: none;
             border-color: #e91e63;
-            background: #111;
+            background: #0d0d0d;
             color: #fff;
             box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
         }
 
         .form-control-dark::placeholder {
-            color: #555;
+            color: #444;
+        }
+
+        label {
+            color: #888;
+            font-size: 0.82rem;
+            margin-bottom: 6px;
+            display: block;
         }
 
         .btn-save {
@@ -126,11 +167,11 @@
             border-radius: 10px;
             font-weight: 600;
             transition: all 0.2s;
+            cursor: pointer;
         }
 
         .btn-save:hover {
             background: #c2185b;
-            color: #fff;
             transform: translateY(-1px);
         }
 
@@ -142,18 +183,18 @@
             border-radius: 10px;
             font-weight: 600;
             transition: all 0.2s;
+            cursor: pointer;
         }
 
         .btn-danger-custom:hover {
             background: #e91e63;
             color: #fff;
-            transform: translateY(-1px);
         }
 
         .alert-custom {
             border-radius: 10px;
             padding: 12px 16px;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
             margin-bottom: 16px;
         }
 
@@ -169,24 +210,29 @@
             color: #e91e63;
         }
 
-        label {
-            color: #aaa;
-            font-size: 0.85rem;
-            margin-bottom: 6px;
-        }
-
-        .back-btn {
-            color: #888;
+        .back-link {
+            color: #666;
             text-decoration: none;
+            font-size: 0.85rem;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             transition: color 0.2s;
         }
 
-        .back-btn:hover {
+        .back-link:hover {
             color: #fff;
+        }
+
+        .danger-warn {
+            background: rgba(233, 30, 99, 0.07);
+            border: 1px solid rgba(233, 30, 99, 0.2);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            font-size: 0.875rem;
+            color: #ccc;
         }
     </style>
 </head>
@@ -194,15 +240,13 @@
 <body>
 
     <!-- NAVBAR -->
-    <nav class="navbar-custom">
-        <a th:href="@{/home}" class="brand text-decoration-none">
-            <span class="brand-icon">✦</span> SocialApp
-        </a>
-        <div class="d-flex align-items-center gap-3">
-            <a th:href="@{/profile/view/{id}(id=${currentUser.id})}" class="nav-icon text-decoration-none"
-                title="Hồ sơ">
+    <nav class="top-navbar">
+        <a class="brand" th:href="@{/home}">✦ SocialApp</a>
+        <div class="nav-spacer"></div>
+        <div class="d-flex align-items-center gap-2">
+            <a th:href="@{/profile}" class="text-decoration-none">
                 <div class="avatar-nav" th:if="${currentUser != null and currentUser.avatarData != null}"
-                    style="padding:0;overflow:hidden;">
+                    style="overflow:hidden;padding:0;">
                     <img th:src="@{/profile/avatar/{id}(id=${currentUser.id})}"
                         style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="avatar">
                 </div>
@@ -215,116 +259,165 @@
         </div>
     </nav>
 
-    <div class="settings-container">
+    <div class="settings-layout">
 
-        <a th:href="@{/home}" class="back-btn">
-            <i class="bi bi-arrow-left"></i> Quay về trang chủ
-        </a>
+        <!-- SIDEBAR -->
+        <nav class="settings-sidebar">
+            <a th:href="@{/home}" class="back-link">
+                <i class="bi bi-arrow-left"></i> Trang chủ
+            </a>
+            <h2>⚙️ Cài đặt</h2>
 
-        <div class="settings-header">
-            <h1><i class="bi bi-gear-fill me-2" style="color:#e91e63;"></i>Cài đặt tài khoản</h1>
-            <p>Quản lý thông tin và bảo mật tài khoản của bạn</p>
-        </div>
+            <button class="settings-menu-item active" data-panel="password">
+                <i class="bi bi-lock-fill"></i> Đổi mật khẩu
+            </button>
+            <button class="settings-menu-item" data-panel="email">
+                <i class="bi bi-envelope-fill"></i> Đổi email
+            </button>
+            <button class="settings-menu-item menu-danger" data-panel="delete">
+                <i class="bi bi-trash-fill"></i> Xóa tài khoản
+            </button>
+        </nav>
 
-        <!-- ĐỔI MẬT KHẨU -->
-        <div class="setting-card">
-            <div class="card-title">
-                <span class="badge-icon badge-blue"><i class="bi bi-lock-fill"></i></span>
-                Đổi mật khẩu
-            </div>
-            <p class="card-desc">Để bảo mật tài khoản, vui lòng nhập mật khẩu hiện tại trước khi đặt mật khẩu mới.</p>
+        <!-- MAIN CONTENT -->
+        <div class="settings-content">
 
-            <div th:if="${successPassword}" class="alert-custom alert-success-custom">
-                <i class="bi bi-check-circle me-2"></i><span th:text="${successPassword}"></span>
-            </div>
-            <div th:if="${errorPassword}" class="alert-custom alert-error-custom">
-                <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorPassword}"></span>
-            </div>
-
-            <form th:action="@{/settings/change-password}" method="post">
-                <div class="mb-3">
-                    <label>Mật khẩu hiện tại *</label>
-                    <input type="password" name="currentPassword" class="form-control form-control-dark"
-                        placeholder="Nhập mật khẩu hiện tại" required>
+            <!-- PANEL: ĐỔI MẬT KHẨU -->
+            <div class="settings-panel active" id="panel-password">
+                <div class="panel-title">
+                    <i class="bi bi-lock-fill" style="color:#2196f3;font-size:1.2rem;"></i> Đổi mật khẩu
                 </div>
-                <div class="mb-3">
-                    <label>Mật khẩu mới *</label>
-                    <input type="password" name="newPassword" class="form-control form-control-dark"
-                        placeholder="Ít nhất 6 ký tự" required>
+                <p class="panel-desc">Để bảo mật tài khoản, nhập mật khẩu hiện tại trước khi đặt mật khẩu mới.</p>
+
+                <div th:if="${successPassword}" class="alert-custom alert-success-custom">
+                    <i class="bi bi-check-circle me-2"></i><span th:text="${successPassword}"></span>
                 </div>
-                <div class="mb-3">
-                    <label>Xác nhận mật khẩu mới *</label>
-                    <input type="password" name="confirmPassword" class="form-control form-control-dark"
-                        placeholder="Nhập lại mật khẩu mới" required>
+                <div th:if="${errorPassword}" class="alert-custom alert-error-custom">
+                    <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorPassword}"></span>
                 </div>
-                <button type="submit" class="btn btn-save">
-                    <i class="bi bi-check2 me-2"></i>Cập nhật mật khẩu
-                </button>
-            </form>
-        </div>
 
-        <!-- ĐỔI EMAIL -->
-        <div class="setting-card">
-            <div class="card-title">
-                <span class="badge-icon badge-green"><i class="bi bi-envelope-fill"></i></span>
-                Đổi email
-            </div>
-            <p class="card-desc">Email hiện tại của bạn là <strong th:text="${currentUser.email}"
-                    style="color:#eee;"></strong>. Nhập mật khẩu để xác nhận thay đổi.</p>
-
-            <div th:if="${successEmail}" class="alert-custom alert-success-custom">
-                <i class="bi bi-check-circle me-2"></i><span th:text="${successEmail}"></span>
-            </div>
-            <div th:if="${errorEmail}" class="alert-custom alert-error-custom">
-                <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorEmail}"></span>
-            </div>
-
-            <form th:action="@{/settings/change-email}" method="post">
-                <div class="mb-3">
-                    <label>Mật khẩu hiện tại *</label>
-                    <input type="password" name="currentPassword" class="form-control form-control-dark"
-                        placeholder="Xác nhận danh tính" required>
+                <div class="setting-card">
+                    <form th:action="@{/settings/change-password}" method="post">
+                        <div class="mb-3">
+                            <label>Mật khẩu hiện tại *</label>
+                            <input type="password" name="currentPassword" class="form-control-dark"
+                                placeholder="Nhập mật khẩu hiện tại" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Mật khẩu mới *</label>
+                            <input type="password" name="newPassword" class="form-control-dark"
+                                placeholder="Ít nhất 6 ký tự" required>
+                        </div>
+                        <div class="mb-4">
+                            <label>Xác nhận mật khẩu mới *</label>
+                            <input type="password" name="confirmPassword" class="form-control-dark"
+                                placeholder="Nhập lại mật khẩu mới" required>
+                        </div>
+                        <button type="submit" class="btn-save">
+                            <i class="bi bi-check2 me-2"></i>Cập nhật mật khẩu
+                        </button>
+                    </form>
                 </div>
-                <div class="mb-3">
-                    <label>Email mới *</label>
-                    <input type="email" name="newEmail" class="form-control form-control-dark"
-                        placeholder="Nhập email mới" required>
-                </div>
-                <button type="submit" class="btn btn-save">
-                    <i class="bi bi-check2 me-2"></i>Cập nhật email
-                </button>
-            </form>
-        </div>
-
-        <!-- XÓA TÀI KHOẢN -->
-        <div class="setting-card danger">
-            <div class="card-title" style="color:#e91e63;">
-                <span class="badge-icon badge-red"><i class="bi bi-trash-fill"></i></span>
-                Xóa tài khoản
-            </div>
-            <p class="card-desc">⚠️ Hành động này <strong style="color:#e91e63;">không thể hoàn tác</strong>. Tài khoản
-                của bạn sẽ bị vô hiệu hóa vĩnh viễn. Tất cả dữ liệu sẽ bị ẩn.</p>
-
-            <div th:if="${errorDelete}" class="alert-custom alert-error-custom">
-                <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorDelete}"></span>
             </div>
 
-            <form th:action="@{/settings/delete-account}" method="post"
-                onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác!')">
-                <div class="mb-3">
-                    <label>Nhập mật khẩu để xác nhận *</label>
-                    <input type="password" name="currentPassword" class="form-control form-control-dark"
-                        placeholder="Mật khẩu hiện tại" required>
+            <!-- PANEL: ĐỔI EMAIL -->
+            <div class="settings-panel" id="panel-email">
+                <div class="panel-title">
+                    <i class="bi bi-envelope-fill" style="color:#4caf50;font-size:1.2rem;"></i> Đổi email
                 </div>
-                <button type="submit" class="btn btn-danger-custom">
-                    <i class="bi bi-trash me-2"></i>Xóa tài khoản vĩnh viễn
-                </button>
-            </form>
-        </div>
+                <p class="panel-desc">
+                    Email hiện tại: <strong style="color:#eee;" th:text="${currentUser.email}"></strong>
+                </p>
 
-    </div>
+                <div th:if="${successEmail}" class="alert-custom alert-success-custom">
+                    <i class="bi bi-check-circle me-2"></i><span th:text="${successEmail}"></span>
+                </div>
+                <div th:if="${errorEmail}" class="alert-custom alert-error-custom">
+                    <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorEmail}"></span>
+                </div>
+
+                <div class="setting-card">
+                    <form th:action="@{/settings/change-email}" method="post">
+                        <div class="mb-3">
+                            <label>Mật khẩu hiện tại *</label>
+                            <input type="password" name="currentPassword" class="form-control-dark"
+                                placeholder="Xác nhận danh tính" required>
+                        </div>
+                        <div class="mb-4">
+                            <label>Email mới *</label>
+                            <input type="email" name="newEmail" class="form-control-dark" placeholder="Nhập email mới"
+                                required>
+                        </div>
+                        <button type="submit" class="btn-save">
+                            <i class="bi bi-check2 me-2"></i>Cập nhật email
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PANEL: XÓA TÀI KHOẢN -->
+            <div class="settings-panel" id="panel-delete">
+                <div class="panel-title">
+                    <i class="bi bi-trash-fill" style="color:#e91e63;font-size:1.2rem;"></i> Xóa tài khoản
+                </div>
+                <p class="panel-desc">Hành động này không thể hoàn tác.</p>
+
+                <div th:if="${errorDelete}" class="alert-custom alert-error-custom">
+                    <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorDelete}"></span>
+                </div>
+
+                <div class="danger-warn">
+                    ⚠️ Tài khoản của bạn sẽ bị <strong style="color:#e91e63;">vô hiệu hóa vĩnh viễn</strong>.
+                    Tất cả bài viết, bình luận và dữ liệu sẽ bị ẩn. Bạn không thể khôi phục lại tài khoản sau khi xóa.
+                </div>
+
+                <div class="setting-card danger">
+                    <form th:action="@{/settings/delete-account}" method="post"
+                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác!')">
+                        <div class="mb-4">
+                            <label>Nhập mật khẩu để xác nhận *</label>
+                            <input type="password" name="currentPassword" class="form-control-dark"
+                                placeholder="Mật khẩu hiện tại" required>
+                        </div>
+                        <button type="submit" class="btn-danger-custom">
+                            <i class="bi bi-trash me-2"></i>Xóa tài khoản vĩnh viễn
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div><!-- end settings-content -->
+    </div><!-- end settings-layout -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Kiểm tra nếu có alert (sau khi submit form), tự động mở đúng panel
+        (function () {
+            const toOpen = /*[[${activePanel != null ? activePanel : 'password'}]]*/ 'password';
+            openPanel(toOpen);
+        })();
+
+        document.querySelectorAll('.settings-menu-item').forEach(btn => {
+            btn.addEventListener('click', function () {
+                openPanel(this.getAttribute('data-panel'));
+            });
+        });
+
+        function openPanel(panelId) {
+            // Ẩn tất cả panels
+            document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+            // Bỏ active tất cả menu items
+            document.querySelectorAll('.settings-menu-item').forEach(b => b.classList.remove('active'));
+
+            // Hiện panel tương ứng
+            const panel = document.getElementById('panel-' + panelId);
+            if (panel) panel.classList.add('active');
+
+            // Active menu item tương ứng
+            const btn = document.querySelector(`[data-panel="${panelId}"]`);
+            if (btn) btn.classList.add('active');
+        }
+    </script>
 </body>
 
 </html>

@@ -92,9 +92,22 @@
                     </div>
                 </div>
 
-                <button class="edit-profile-btn" id="editProfileBtn">
+                <!-- Hiển thị nút Edit nếu là profile của chính mình -->
+                <button th:if="${isOwnProfile}" class="edit-profile-btn" id="editProfileBtn">
                     <i class="bi bi-pencil me-1"></i>Chỉnh sửa
                 </button>
+
+                <!-- Action buttons nếu là profile người khác -->
+                <div th:unless="${isOwnProfile}" class="d-flex gap-2">
+                    <button class="edit-profile-btn border-0" style="background:#2a2a35; color:#fff;">
+                        <i class="bi bi-person-plus-fill me-1"></i>Đang theo dõi
+                    </button>
+                    <!-- Nút Nhắn tin -->
+                    <a th:href="@{/chat/{id}(id=${user.id})}" class="edit-profile-btn border-0 text-decoration-none"
+                        style="background: linear-gradient(135deg, #7c3aed, #a855f7); color:#fff; display: inline-flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-chat-dots-fill me-1"></i>Nhắn tin
+                    </a>
+                </div>
             </div>
         </div>
     </div>

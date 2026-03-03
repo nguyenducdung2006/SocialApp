@@ -30,13 +30,13 @@
             </div>
             <div class="nav-spacer"></div>
             <div class="d-flex align-items-center gap-2">
-                <a th:href="@{/notifications}" th:if="${currentUser != null}" class="nav-icon text-decoration-none">
+                <a th:href="@{/notifications}" th:if="${currentUser != null}" class="nav-icon text-decoration-none"
+                    id="notifBell">
                     <i class="bi bi-bell"></i>
-                    <span class="notif-badge">3</span>
+                    <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
                 </a>
                 <a th:href="@{/chat}" th:if="${currentUser != null}" class="nav-icon text-decoration-none">
                     <i class="bi bi-chat-dots"></i>
-                    <span class="notif-badge">5</span>
                 </a>
                 <a th:href="@{/upload}" class="upload-btn text-decoration-none">
                     <i class="bi bi-cloud-upload"></i> Đăng tải
@@ -215,7 +215,8 @@
                                         dung</p>
 
                                     <!-- Nút xóa comment -->
-                                    <form th:if="${currentUser != null && (currentUser.id == c.user.id || isOwner)}"
+                                    <form
+                                        th:if="${currentUser != null && (currentUser.id.equals(c.user.id) || isOwner)}"
                                         th:action="@{/comment/{id}/delete(id=${c.id})}" method="post"
                                         onsubmit="return confirm('Xóa bình luận này?')" class="position-absolute"
                                         style="top: 8px; right: -25px;">
@@ -264,7 +265,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:src="@{/js/post-detail.js}"></script>
+    <!-- SockJS + STOMP for real-time notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const followBtn = document.querySelector('.detail-follow-btn');
@@ -370,7 +373,7 @@
                     .then(res => {
                         if (res.status === 401) {
                             window.location.href = '/auth/login';
-                            throw new Error("Unauthorized");
+                            throw new Error('Unauthorized');
                         }
                         return res.json();
                     })
@@ -388,6 +391,57 @@
                     })
                     .catch(err => console.error(err));
             });
+        }
+
+        function showNotifToast(notif) {
+            const existing = document.querySelector('.notif-toast');
+            if (existing) existing.remove();
+            const ICONS = { 'FOLLOW': '👤', 'NEW_POST': '🖼️', 'COMMENT': '💬', 'POST_DELETED': '🗑️', 'POST_REPORTED': '🚩' };
+            const toast = document.createElement('div');
+            toast.className = 'notif-toast';
+            toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:#1a1a1a;border:1px solid #e91e63;border-radius:14px;padding:14px 18px;max-width:320px;cursor:pointer;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:flex;gap:12px;align-items:flex-start;animation:slideInRight 0.3s ease;';
+            toast.innerHTML = `<span style="font-size:1.4rem;">${ICONS[notif.type] || '🔔'}</span><div><div style="color:#fff;font-size:0.875rem;font-weight:600;margin-bottom:2px;">Thông báo mới</div><div style="color:#bbb;font-size:0.82rem;">${notif.message}</div></div>`;
+            toast.addEventListener('click', () => window.location.href = notif.link || '/notifications');
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        const _style = document.createElement('style');
+        _style.textContent = '@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}';
+        document.head.appendChild(_style);
+
+        // ===== NOTIFICATION BADGE =====
+        const notifBadge = document.getElementById('notifBadge');
+        function updateBadge(count) {
+            if (!notifBadge) return;
+            if (count > 0) {
+                notifBadge.textContent = count > 99 ? '99+' : count;
+                notifBadge.style.display = '';
+            } else {
+                notifBadge.style.display = 'none';
+            }
+        }
+        fetch('/api/notifications/count')
+            .then(r => r.json())
+            .then(d => updateBadge(d.count || 0))
+            .catch(() => { });
+
+        // ===== WEBSOCKET STOMP =====
+        const currentUserId = /*[[${currentUser != null ? currentUser.id : 0}]]*/ 0;
+        if (currentUserId > 0) {
+            try {
+                const sock = new SockJS('/ws');
+                const stompClient = Stomp.over(sock);
+                stompClient.debug = null;
+                stompClient.connect({}, function () {
+                    stompClient.subscribe('/topic/user-' + currentUserId, function (msg) {
+                        const notif = JSON.parse(msg.body);
+                        const cur = parseInt(notifBadge ? notifBadge.textContent : '0') || 0;
+                        updateBadge(cur + 1);
+                        showNotifToast(notif);
+                    });
+                }, function (err) { console.log('WS error:', err); });
+            } catch (e) { }
         }
     </script>
 </body>

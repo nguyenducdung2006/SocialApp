@@ -2,6 +2,7 @@ package com.example.AsmJava5.controller;
 
 import com.example.AsmJava5.model.*;
 import com.example.AsmJava5.repository.*;
+import com.example.AsmJava5.service.NotificationService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class PostController {
     private final ReportRepository reportRepository;
     private final FollowRepository followRepository;
     private final SavedPostRepository savedPostRepository;
+    private final NotificationService notificationService;
 
     // ===== XEM CHI TIẾT BÀI ĐĂNG =====
     @GetMapping("/post/{id}")
@@ -77,6 +79,7 @@ public class PostController {
         model.addAttribute("isSaved", isSaved);
         model.addAttribute("comments", comments);
         model.addAttribute("currentUser", currentUser);
+        model.addAttribute("sessionUser", currentUser);
         model.addAttribute("isReacted", isReacted);
         model.addAttribute("myReactionType", myReactionType);
         model.addAttribute("isOwner", isOwner);
@@ -100,11 +103,12 @@ public class PostController {
             return "redirect:/home";
         }
 
+        // Nếu admin xóa bài của người khác -> gửi thông báo
         if (!post.getUser().getId().equals(user.getId())) {
-            ra.addFlashAttribute("error", "Bạn không có quyền xóa!");
-            return "redirect:/post/" + id;
+            notificationService.notifyPostDeleted(post.getUser(), post.getTitle());
+        } else if (post.getUser().getId().equals(user.getId())) {
+            // Chủ tự xóa -> không cần thông báo
         }
-
         post.setIsDeleted(true);
         post.setUpdatedAt(LocalDateTime.now());
         postRepository.save(post);
@@ -279,11 +283,14 @@ public class PostController {
                 .build();
 
         commentRepository.save(comment);
+        // Thông báo cho chủ bài viết (nếu người bình luận không phải chủ)
+        notificationService.notifyComment(user, post);
         return "redirect:/post/" + id;
     }
 
     // ===== XÓA BÌNH LUẬN =====
     @PostMapping("/comment/{commentId}/delete")
+    @org.springframework.transaction.annotation.Transactional
     public String deleteComment(@PathVariable Long commentId,
                                 HttpSession session,
                                 RedirectAttributes ra) {
@@ -292,10 +299,15 @@ public class PostController {
 
         User user = userRepository.findByEmail(email).orElse(null);
         Comment comment = commentRepository.findById(commentId).orElse(null);
-        if (comment == null) return "redirect:/home";
+        if (comment == null || user == null) return "redirect:/home";
+
+        // Load post trực tiếp để tránh LazyInitializationException
+        Long postId = comment.getPost().getId();
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) return "redirect:/home";
 
         boolean isCommentOwner = comment.getUser().getId().equals(user.getId());
-        boolean isPostOwner = comment.getPost().getUser().getId().equals(user.getId());
+        boolean isPostOwner = post.getUser().getId().equals(user.getId());
 
         if (isCommentOwner || isPostOwner) {
             comment.setIsDeleted(true);
@@ -305,7 +317,7 @@ public class PostController {
             ra.addFlashAttribute("error", "Bạn không có quyền xóa bình luận này!");
         }
 
-        return "redirect:/post/" + comment.getPost().getId();
+        return "redirect:/post/" + postId;
     }
 
     // ===== BÁO CÁO BÀI ĐĂNG =====

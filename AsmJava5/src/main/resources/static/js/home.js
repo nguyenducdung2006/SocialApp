@@ -79,9 +79,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // ===== FOLLOW BUTTON =====
     document.querySelectorAll('.follow-btn').forEach(btn => {
         btn.addEventListener('click', function () {
-            const isFollowing = this.classList.toggle('following');
-            this.textContent = isFollowing ? 'Đang theo dõi' : 'Theo dõi';
-            showToast(isFollowing ? '✅ Đã theo dõi!' : 'Đã hủy theo dõi');
+            const userId = this.getAttribute('data-id');
+            if (!userId) return;
+            fetch('/profile/follow/' + userId, { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) { showToast('⚠️ ' + data.error); return; }
+                    if (data.followed) {
+                        this.classList.add('following');
+                        this.textContent = 'Đang theo dõi';
+                        showToast('✅ Đã theo dõi!');
+                    } else {
+                        this.classList.remove('following');
+                        this.textContent = 'Theo dõi';
+                        showToast('🗑️ Đã hủy theo dõi');
+                    }
+                })
+                .catch(e => console.error(e));
         });
     });
 
@@ -118,8 +132,30 @@ document.addEventListener('DOMContentLoaded', function () {
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     const grid = document.getElementById('mainGrid');
     const feedTabs = document.querySelectorAll('.feed-tab');
+    const secTitle = document.getElementById('secTitle');
+    const secAll = document.getElementById('secAll');
     let page = 1;
-    let currentTab = 'new'; // Mặc định
+    let currentTab = 'foryou'; // Mặc định: Dành cho bạn
+
+    // Map tiêu đề section theo tab
+    const TAB_TITLES = {
+        'foryou': '🎯 Dành cho bạn',
+        'new': '✨ Mới nhất hôm nay',
+        'following': '👥 Đang theo dõi',
+        'popular': '🔥 Phổ biến',
+        'ranking': '🏆 Ranking hôm nay'
+    };
+
+    function updateSectionTitle(tab) {
+        if (secTitle) secTitle.textContent = TAB_TITLES[tab] || '✨ Mới nhất hôm nay';
+        if (secAll) {
+            if (tab === 'foryou') {
+                secAll.style.display = 'none';
+            } else {
+                secAll.style.display = '';
+            }
+        }
+    }
 
     // Bắt sự kiện chuyển Tab
     feedTabs.forEach(t => {
@@ -131,6 +167,8 @@ document.addEventListener('DOMContentLoaded', function () {
             currentTab = this.getAttribute('data-target');
             page = 1; // Reset trang
             if (grid) grid.innerHTML = ''; // Clear Feed
+
+            updateSectionTitle(currentTab);
 
             // Hiện chữ tải...
             if (loadMoreBtn) {
@@ -158,7 +196,25 @@ document.addEventListener('DOMContentLoaded', function () {
     function fetchData() {
         if (!loadMoreBtn || !grid) return;
 
-        fetch(`/api/posts?page=${page}&tab=${currentTab}`)
+        let url;
+        if (currentTab === 'foryou') {
+            // Lấy top tags từ localStorage
+            const tagMap = JSON.parse(localStorage.getItem('tagViews') || '{}');
+            const topTags = Object.entries(tagMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([tag]) => tag);
+            if (topTags.length === 0) {
+                // Chưa có lịch sử: fallback về new
+                url = `/api/posts?page=${page}&tab=new`;
+            } else {
+                url = `/api/posts?page=${page}&tab=foryou&tags=${encodeURIComponent(topTags.join(','))}`;
+            }
+        } else {
+            url = `/api/posts?page=${page}&tab=${currentTab}`;
+        }
+
+        fetch(url)
             .then(res => {
                 if (res.status === 401) {
                     window.location.href = '/auth/login';

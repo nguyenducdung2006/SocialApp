@@ -147,11 +147,35 @@ public class HomeController {
     @ResponseBody
     public ResponseEntity<?> getApiPosts(@RequestParam(defaultValue = "1") int page,
                                          @RequestParam(defaultValue = "new") String tab,
+                                         @RequestParam(required = false) String tags,
                                          HttpSession session) {
         Pageable pageable = PageRequest.of(page - 1, 6, Sort.by("createdAt").descending());
         org.springframework.data.domain.Page<Post> postPage;
 
         switch (tab) {
+            case "foryou":
+                // Tìm bài theo các tag user hay xem (truyền từ localStorage qua JS)
+                if (tags != null && !tags.trim().isEmpty()) {
+                    String[] tagArr = tags.split(",");
+                    java.util.Set<Long> seen = new java.util.LinkedHashSet<>();
+                    java.util.List<Post> foryouPosts = new java.util.ArrayList<>();
+                    for (String tag : tagArr) {
+                        String t = tag.trim().replaceAll("^#+", "");
+                        if (t.isEmpty()) continue;
+                        List<Post> found = postRepository.searchPosts(t);
+                        for (Post p : found) {
+                            if (seen.add(p.getId())) foryouPosts.add(p);
+                        }
+                    }
+                    // Phân trang thủ công
+                    int start = (page - 1) * 6;
+                    int end = Math.min(start + 6, foryouPosts.size());
+                    if (start >= foryouPosts.size()) return ResponseEntity.ok(java.util.List.of());
+                    return ResponseEntity.ok(foryouPosts.subList(start, end));
+                }
+                // Fallback: không có tags → trả về bài mới nhất
+                postPage = postRepository.findAllByIsDeletedFalse(pageable);
+                break;
             case "following":
                 String email = (String) session.getAttribute("email");
                 if (email == null) return ResponseEntity.status(401).body("Yêu cầu đăng nhập");

@@ -70,14 +70,25 @@
                     </div>
                 </div>
 
-                <!-- NÚT THEO DÕI -->
-                <button th:if="${currentUser != null and currentUser.id != targetUser.id}"
-                    class="btn rounded-pill px-4 fw-bold"
-                    th:classappend="${isFollowing ? 'btn-secondary' : 'btn-primary'}" id="followBtn"
-                    th:data-id="${targetUser.id}">
-                    <i class="bi" th:classappend="${isFollowing ? 'bi-person-check-fill' : 'bi-person-plus-fill'}"></i>
-                    <span id="followBtnText" th:text="${isFollowing ? ' Đang theo dõi' : ' Theo dõi'}"> Theo dõi</span>
-                </button>
+                <!-- ACTION BUTTONS QUAN TRỌNG -->
+                <div th:if="${currentUser != null and currentUser.id != targetUser.id}" class="d-flex gap-2">
+                    <!-- NÚT THEO DÕI -->
+                    <button class="btn rounded-pill px-4 fw-bold"
+                        th:classappend="${isFollowing ? 'btn-secondary' : 'btn-primary'}" id="followBtn"
+                        th:data-id="${targetUser.id}">
+                        <i class="bi"
+                            th:classappend="${isFollowing ? 'bi-person-check-fill' : 'bi-person-plus-fill'}"></i>
+                        <span id="followBtnText" th:text="${isFollowing ? ' Đang theo dõi' : ' Theo dõi'}"> Theo
+                            dõi</span>
+                    </button>
+                    <!-- NÚT NHẮN TIN -->
+                    <a th:href="@{/chat/{id}(id=${targetUser.id})}"
+                        class="btn rounded-pill px-4 fw-bold text-white text-decoration-none"
+                        style="background: linear-gradient(135deg, #7c3aed, #a855f7); border: none; display: inline-flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-chat-dots-fill me-1"></i>Nhắn tin
+                    </a>
+                </div>
+                <!-- NẾU CHƯA ĐĂNG NHẬP -->
                 <div th:if="${currentUser == null}">
                     <a th:href="@{/auth/login}" class="btn btn-primary rounded-pill px-4 fw-bold">
                         <i class="bi bi-person-plus-fill"></i> Đăng nhập
