@@ -143,7 +143,7 @@
             <!-- Header -->
             <div class="report-header">
                 <h4><i class="bi bi-flag-fill me-2"></i>Báo cáo #<span th:text="${report.id}">1</span></h4>
-                <div class="text-muted" style="font-size: 0.9rem;">
+                <div style="font-size: 0.9rem; color: #ddd;">
                     Báo cáo bởi: <a th:href="@{/profile/view/{id}(id=${report.reporter.id})}"
                         style="color: #a855f7; text-decoration: none; font-weight: 600;">@<span
                             th:text="${report.reporter.username}">user</span></a>
@@ -159,14 +159,21 @@
 
             <!-- Post Preview -->
             <div class="post-preview" th:if="${report.post != null}">
-                <img th:if="${report.post.imageData != null}" th:src="@{/upload/image/{id}(id=${report.post.id})}"
-                    alt="Post Image">
-                <img th:if="${report.post.imageData == null && report.post.imageUrl != null}"
-                    th:src="${report.post.imageUrl}" alt="Post Image">
+                <a th:href="@{/post/{id}(id=${report.post.id})}" target="_blank"
+                    style="text-decoration:none; flex-shrink:0;">
+                    <img th:if="${report.post.imageData != null}" th:src="@{/upload/image/{id}(id=${report.post.id})}"
+                        alt="Post Image" style="cursor:pointer;">
+                    <img th:if="${report.post.imageData == null && report.post.imageUrl != null}"
+                        th:src="${report.post.imageUrl}" alt="Post Image" style="cursor:pointer;">
+                </a>
 
                 <div class="post-details">
-                    <h5 class="text-white mb-2" th:text="${report.post.title}">Tiêu đề</h5>
-                    <p style="color: #aaa; margin-bottom: 10px;" th:text="${report.post.content}">Nội dung</p>
+                    <h5 class="mb-2">
+                        <a th:href="@{/post/{id}(id=${report.post.id})}" target="_blank"
+                            style="color: #fff; text-decoration: none;" onmouseover="this.style.color='#a855f7'"
+                            onmouseout="this.style.color='#fff'" th:text="${report.post.title}">Tiêu đề</a>
+                    </h5>
+                    <p style="color: #aaa; margin-bottom: 10px;" th:text="${report.post.description}">Nội dung</p>
                     <div style="font-size: 0.85rem; color: #888;">
                         <span class="me-3"><i class="bi bi-person me-1"></i>Người đăng: <a
                                 th:href="@{/profile/view/{id}(id=${report.post.user.id})}"
@@ -178,6 +185,7 @@
                     </div>
                 </div>
             </div>
+
 
             <!-- Actions -->
             <div class="action-buttons">

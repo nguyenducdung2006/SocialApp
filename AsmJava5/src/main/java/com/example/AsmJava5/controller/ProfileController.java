@@ -130,6 +130,7 @@ public class ProfileController {
     // ===== FOLLOW TÀI KHOẢN =====
     @PostMapping("/follow/{id}")
     @ResponseBody
+    @org.springframework.transaction.annotation.Transactional
     public java.util.Map<String, Object> toggleFollow(@PathVariable Long id, HttpSession session) {
         java.util.Map<String, Object> response = new java.util.HashMap<>();
         try {
@@ -137,6 +138,10 @@ public class ProfileController {
 
             if (currentUser == null) {
                 response.put("error", "Chưa đăng nhập");
+                return response;
+            }
+            if ("ADMIN".equals(currentUser.getRole())) {
+                response.put("error", "Admin không thể theo dõi người dùng");
                 return response;
             }
             if (currentUser.getId().equals(id)) {

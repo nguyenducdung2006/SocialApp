@@ -533,6 +533,20 @@
             color: #666;
         }
 
+        .chat-action-btn {
+            background: none;
+            border: none;
+            color: #a855f7;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: color 0.15s;
+        }
+
+        .chat-action-btn:hover {
+            color: #c084fc;
+        }
+
         .send-btn {
             width: 40px;
             height: 40px;
@@ -712,7 +726,15 @@
                             </div>
                         </div>
 
-                        <div class="msg-bubble" th:text="${msg.content}">nội dung</div>
+                        <div class="msg-bubble">
+                            <th:block th:if="${msg.content != null and msg.content.startsWith('[IMAGE]:')}">
+                                <img th:src="${msg.content.substring(8)}" alt="image"
+                                    style="max-width:200px; border-radius:8px; display:block;">
+                            </th:block>
+                            <th:block th:unless="${msg.content != null and msg.content.startsWith('[IMAGE]:')}">
+                                <span th:text="${msg.content}">nội dung</span>
+                            </th:block>
+                        </div>
                         <div class="msg-time" th:text="${#temporals.format(msg.sentAt, 'HH:mm')}">12:00</div>
                     </div>
 
@@ -739,6 +761,13 @@
                         <textarea id="msgInput" rows="1" placeholder="Nhập tin nhắn..."
                             style="line-height:1.4;"></textarea>
                     </div>
+
+                    <!-- Nút gửi ảnh -->
+                    <button class="chat-action-btn" id="sendImgBtn" title="Gửi ảnh">
+                        <i class="bi bi-image"></i>
+                    </button>
+                    <input type="file" id="chatImgInput" accept="image/*" style="display:none;">
+
                     <button class="send-btn" id="sendBtn" title="Gửi">
                         <i class="bi bi-send-fill"></i>
                     </button>
@@ -851,7 +880,12 @@
 
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble';
-            bubble.textContent = data.content;
+            if (data.content && typeof data.content === 'string' && data.content.startsWith('[IMAGE]:')) {
+                const imgStr = data.content.substring(8);
+                bubble.innerHTML = `<img src="${imgStr}" alt="image" style="max-width:200px; border-radius:8px; display:block;">`;
+            } else {
+                bubble.textContent = data.content;
+            }
             row.appendChild(bubble);
 
             const timeEl = document.createElement('div');
@@ -928,6 +962,51 @@
 
         // ===== EVENT LISTENERS =====
         if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+
+        const imgInput = document.getElementById('chatImgInput');
+        const sendImgBtn = document.getElementById('sendImgBtn');
+
+        if (sendImgBtn) {
+            sendImgBtn.addEventListener('click', () => {
+                if (!stompClient || !stompClient.connected) {
+                    alert('Chưa kết nối WebSockets!');
+                    return;
+                }
+                imgInput.click();
+            });
+        }
+
+        if (imgInput) {
+            imgInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Upload AJAX
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/upload/chat-img', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.url) {
+                            const content = '[IMAGE]:' + data.url;
+                            stompClient.send('/app/chat.send', {}, JSON.stringify({
+                                senderId: myId,
+                                receiverId: otherId,
+                                content: content
+                            }));
+                        } else if (data.error) {
+                            alert(data.error);
+                        }
+                    })
+                    .catch(err => alert("Lỗi tải ảnh lên"));
+
+                imgInput.value = ''; // reset
+            });
+        }
 
         if (msgInput) {
             // Enter to send (Shift+Enter = newline)

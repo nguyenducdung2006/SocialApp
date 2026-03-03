@@ -181,6 +181,7 @@ public class PostController {
 
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) return ResponseEntity.status(401).body("Không tìm thấy user");
+        if ("ADMIN".equals(user.getRole())) return ResponseEntity.status(403).body("Admin không thể thực hiện hành động này");
 
         Post post = postRepository.findById(id).orElse(null);
         if (post == null) return ResponseEntity.notFound().build();
@@ -236,6 +237,7 @@ public class PostController {
 
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) return ResponseEntity.status(401).body("Không tìm thấy user");
+        if ("ADMIN".equals(user.getRole())) return ResponseEntity.status(403).body("Admin không thể thực hiện hành động này");
 
         Post post = postRepository.findById(id).orElse(null);
         if (post == null) return ResponseEntity.notFound().build();
@@ -263,6 +265,12 @@ public class PostController {
                              RedirectAttributes ra) {
         String email = (String) session.getAttribute("email");
         if (email == null) return "redirect:/auth/login";
+
+        User userCheck = userRepository.findByEmail(email).orElse(null);
+        if (userCheck != null && "ADMIN".equals(userCheck.getRole())) {
+            ra.addFlashAttribute("error", "Admin không thể bình luận!");
+            return "redirect:/post/" + id;
+        }
 
         if (content == null || content.trim().isEmpty()) {
             ra.addFlashAttribute("error", "Bình luận không được để trống!");

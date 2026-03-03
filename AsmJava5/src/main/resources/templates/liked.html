@@ -4,20 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yêu thích - Social App</title>
+    <title>Trang chủ - Social App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" th:href="@{/css/home.css}">
 </head>
 
-<body
-    th:attr="data-homebg=${sessionUser != null and sessionUser.equippedHomeBg != null ? sessionUser.equippedHomeBg : ''}">
+<!-- Dùng data-homebg thay th:style để tránh lỗi SpEL 100k chars -->
 
+<body th:attr="data-homebg=${sessionUser != null and sessionUser.equippedHomeBg != null ?
+    sessionUser.equippedHomeBg : ''}">
+
+    <!-- Overlay mờ khi có nền — JS sẽ bật lên nếu có BG -->
     <div id="homeBgOverlay"
         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:0;pointer-events:none;"></div>
 
+    <!-- Bọc toàn bộ content -->
     <div style="position:relative;z-index:1;">
 
+        <!-- NAVBAR -->
         <nav class="top-navbar">
             <a class="brand" th:href="@{/home}">✦ SocialApp</a>
             <div class="search-wrap d-none d-md-flex">
@@ -28,10 +33,21 @@
             </div>
             <div class="nav-spacer"></div>
             <div class="d-flex align-items-center gap-2">
-                <a th:href="@{/liked}" class="nav-icon text-decoration-none">
-                    <i class="bi bi-heart-fill text-danger fw-bold" style="font-size: 1.25rem;"></i>
+                <a th:href="@{/notifications}" class="nav-icon text-decoration-none" id="notifBell">
+                    <i class="bi bi-bell"></i>
+                    <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
                 </a>
-                <a th:href="@{/upload}" class="upload-btn text-decoration-none">
+                <a th:href="@{/chat}" th:if="${sessionUser == null or sessionUser.role != 'ADMIN'}"
+                    class="nav-icon text-decoration-none">
+                    <i class="bi bi-chat-dots"></i>
+                </a>
+                <!-- Admin Dashboard Link -->
+                <a th:if="${sessionUser != null and sessionUser.role == 'ADMIN'}" th:href="@{/admin/reports}"
+                    class="nav-icon text-decoration-none" title="Admin Dashboard">
+                    <i class="bi bi-shield-lock-fill text-danger"></i>
+                </a>
+                <a th:if="${sessionUser == null or sessionUser.role != 'ADMIN'}" th:href="@{/upload}"
+                    class="upload-btn text-decoration-none">
                     <i class="bi bi-cloud-upload"></i> Đăng tải
                 </a>
                 <a th:href="@{/profile}" class="text-decoration-none">
@@ -44,33 +60,93 @@
                         th:text="${sessionUser != null ? sessionUser.username.substring(0,1).toUpperCase() : 'U'}">U
                     </div>
                 </a>
-                <a th:href="@{/auth/logout}" th:if="${sessionUser != null}" class="nav-icon text-decoration-none"
-                    title="Đăng xuất">
+                <a th:href="@{/wallet/recharge}" class="nav-icon text-decoration-none" title="Nạp tiền">
+                    <i class="bi bi-wallet2"></i>
+                </a>
+                <a th:href="@{/auth/logout}" class="nav-icon text-decoration-none" title="Đăng xuất">
                     <i class="bi bi-box-arrow-right"></i>
                 </a>
             </div>
         </nav>
 
-        <div class="tab-bar">
-            <a th:href="@{/home}" class="tab-link">Trở về Trang Chủ</a>
-        </div>
+        <!-- KHÔNG CÓ TAB BAR TRÊN TRANG SAVED -->
+        <br>
+        <div class="page-layout">
 
-        <div class="page-layout mt-4">
-            <main class="main-content mx-auto" style="max-width: 1000px;">
-                <h3 class="fw-bold mb-4">❤️ Bài Viết Yêu Thích</h3>
-
-                <div class="ranking-grid"
-                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-                    <div th:if="${likedPosts.empty}" class="w-100 text-center py-5 text-muted">
-                        <h4>Bạn chưa thích bài viết nào.</h4>
-                        <p>Hãy khám phá và nhấn ❤️ để lưu vào đây nhé!</p>
+            <!-- LEFT SIDEBAR -->
+            <div class="left-sidebar d-none d-xl-block">
+                <div class="sidebar-section">
+                    <div class="sidebar-label">Khám phá</div>
+                    <a th:href="@{/home}" class="sidebar-link active">
+                        <i class="bi bi-house-fill"></i> Trang chủ
+                    </a>
+                    <a th:href="@{/trending}" class="sidebar-link">
+                        <i class="bi bi-fire"></i> Xu hướng
+                    </a>
+                    <a th:if="${sessionUser != null and sessionUser.role != 'ADMIN'}" th:href="@{/profile#tab-likes}"
+                        class="sidebar-link">
+                        <i class="bi bi-heart-fill"></i> Đã thích
+                    </a>
+                    <a th:if="${sessionUser != null and sessionUser.role != 'ADMIN'}" th:href="@{/profile#tab-saved}"
+                        class="sidebar-link">
+                        <i class="bi bi-bookmark-fill"></i> Đã lưu
+                    </a>
+                    <a th:href="@{/settings}" class="sidebar-link">
+                        <i class="bi bi-gear-fill"></i> Cài đặt
+                    </a>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-label">Tags phổ biến</div>
+                    <div class="tag-list">
+                        <a th:href="@{/search(q=${tag})}" th:each="tag : ${hotTags}" class="text-decoration-none">
+                            <span class="tag" th:text="${tag}">#tag</span>
+                        </a>
                     </div>
+                </div>
+            </div>
 
-                    <div class="rank-card" th:each="r : ${likedPosts}" style="width: 100%;">
+            <!-- MAIN CONTENT -->
+            <div class="main-content">
+                <div class="sec-header">
+                    <span class="sec-title"><i class="bi bi-bookmark-check-fill me-2" style="color:var(--primary)"></i>
+                        Bài viết đã lưu</span>
+                </div>
+
+                <div th:if="${savedPosts == null or savedPosts.empty}" class="text-center py-5 text-muted">
+                    <i class="bi bi-journal-x" style="font-size: 3rem;"></i>
+                    <p class="mt-3">Bạn chưa lưu bài viết nào.</p>
+                </div>
+
+                <div class="img-grid" th:if="${savedPosts != null and !savedPosts.empty}">
+                    <a th:each="p : ${savedPosts}" th:href="@{/post/{id}(id=${p.id})}"
+                        class="grid-item text-decoration-none">
+                        <img th:if="${p.imageData != null}" th:src="@{/upload/image/{id}(id=${p.id})}" alt="post">
+                        <img th:if="${p.imageData == null && p.imageUrl != null}" th:src="${p.imageUrl}" alt="post">
+                        <div class="overlay">
+                            <span class="title text-truncate d-block" th:text="${p.title}">Tiêu đề</span>
+                            <div class="stats">
+                                <span><i class="bi bi-heart-fill"></i> <span th:text="${p.likesCount}">0</span></span>
+                                <span><i class="bi bi-eye-fill"></i> <span th:text="${p.views}">0</span></span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+
+                <!-- Không có AJAX load more trong saved view -->
+
+                <!-- RANKING -->
+                <div class="sec-header">
+                    <span class="sec-title">🏆 Ranking hôm nay</span>
+                    <a th:href="@{/ranking}" class="sec-all">Xem tất cả →</a>
+                </div>
+                <div class="ranking-grid">
+                    <div class="rank-card" th:each="r, stat : ${rankingPosts}">
+                        <span th:class="'rank-num r' + ${stat.count}" th:text="${stat.count}">1</span>
                         <a th:href="@{/post/{id}(id=${r.id})}">
                             <img th:if="${r.imageData != null}" th:src="@{/upload/image/{id}(id=${r.id})}"
                                 class="rank-img" alt="">
-                            <img th:if="${r.imageData == null and r.imageUrl != null}" th:src="${r.imageUrl}"
+                            <img th:if="${r.imageData == null && r.imageUrl != null}" th:src="${r.imageUrl}"
                                 class="rank-img" alt="">
                         </a>
                         <div class="rank-info">
@@ -81,12 +157,109 @@
                                 <div class="rank-author" th:text="'@' + ${r.user.username}">@user</div>
                             </a>
                         </div>
+                        <span class="rank-likes"><i class="bi bi-heart-fill"></i> <span
+                                th:text="${r.likesCount}">0</span></span>
                     </div>
                 </div>
-            </main>
-        </div>
-    </div>
+            </div>
 
+            <!-- RIGHT SIDEBAR -->
+            <div class="right-sidebar d-none d-lg-block">
+                <div class="widget">
+                    <a th:href="@{/profile}" class="text-decoration-none">
+                        <div class="profile-top">
+                            <div class="profile-avatar"
+                                th:if="${sessionUser != null and sessionUser.avatarData != null}"
+                                style="overflow:hidden;padding:0;">
+                                <img th:src="@{/profile/avatar/{id}(id=${sessionUser.id})}"
+                                    style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="avatar">
+                            </div>
+                            <div class="profile-avatar" th:if="${sessionUser == null or sessionUser.avatarData == null}"
+                                th:text="${sessionUser != null ? sessionUser.username.substring(0,1).toUpperCase() : 'U'}">
+                                U</div>
+                            <div class="profile-name"
+                                th:text="${sessionUser != null ? (sessionUser.fullName != null ? sessionUser.fullName : sessionUser.username) : 'Người dùng'}">
+                                Người dùng</div>
+                            <div class="profile-username"
+                                th:text="${sessionUser != null ? '@' + sessionUser.username : '@username'}">@username
+                            </div>
+                        </div>
+                    </a>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-num" th:text="${totalPosts != null ? totalPosts : 0}">0</div>
+                            <div class="stat-label">Tác phẩm</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num" th:text="${totalFollowers != null ? totalFollowers : 0}">0</div>
+                            <div class="stat-label">Followers</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num" th:text="${totalFollowing != null ? totalFollowing : 0}">0</div>
+                            <div class="stat-label">Following</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-2">
+                        <a th:href="@{/shop}" class="btn btn-sm btn-outline-warning w-50">
+                            <i class="bi bi-shop"></i> Shop
+                        </a>
+                        <a th:href="@{/wallet/recharge}" class="btn btn-sm btn-outline-success w-50">
+                            <i class="bi bi-wallet2"></i> Nạp tiền
+                        </a>
+                    </div>
+                </div>
+
+                <div class="widget">
+                    <div class="widget-title">Gợi ý theo dõi</div>
+                    <div class="suggest-list">
+                        <div class="suggest-item" th:each="u : ${suggestedUsers}">
+                            <a th:href="@{/profile/view/{id}(id=${u.id})}" class="text-decoration-none">
+                                <div class="suggest-avatar text-white d-flex align-items-center justify-content-center"
+                                    th:if="${u.avatarData == null}" style="background:#e94560;"
+                                    th:text="${u.username.substring(0,1).toUpperCase()}">A</div>
+                                <img th:if="${u.avatarData != null}" th:src="@{/profile/avatar/{id}(id=${u.id})}"
+                                    class="suggest-avatar border-0" style="object-fit:cover;" alt="A">
+                            </a>
+                            <div class="suggest-info text-truncate">
+                                <a th:href="@{/profile/view/{id}(id=${u.id})}" class="text-decoration-none text-light">
+                                    <div class="suggest-name text-truncate"
+                                        th:text="${u.fullName != null ? u.fullName : u.username}">Name</div>
+                                </a>
+                                <div class="suggest-sub text-truncate" th:text="'@' + ${u.username}">@user</div>
+                            </div>
+                            <button th:if="${sessionUser == null or sessionUser.role != 'ADMIN'}"
+                                class="follow-btn quick-follow-btn" th:data-id="${u.id}">Theo dõi</button>
+                        </div>
+                        <div th:if="${suggestedUsers == null or suggestedUsers.empty}"
+                            class="text-muted text-center py-3">
+                            <small>Chưa có gợi ý</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="widget">
+                    <div class="widget-title">Tags hot hôm nay</div>
+                    <div class="tag-list">
+                        <a th:href="@{/search(q=${tag})}" th:each="tag : ${hotTags}" class="text-decoration-none">
+                            <span class="tag" th:text="${tag}">#tag</span>
+                        </a>
+                        <div th:if="${hotTags == null or hotTags.empty}" class="text-muted text-center w-100 py-3">
+                            <small>Đang trống</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div><!-- end page-layout -->
+
+        <!-- LIGHTBOX -->
+        <div class="lightbox" id="lightbox">
+            <div class="lightbox-close" id="lightboxClose"><i class="bi bi-x-lg"></i></div>
+            <img src="" id="lightboxImg" alt="">
+        </div>
+
+    </div><!-- end z-index wrapper -->
+
+    <!-- Script background & Quick Follow JS -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const bgUrl = document.body.getAttribute('data-homebg');
@@ -95,7 +268,132 @@
                 document.body.style.backgroundSize = 'cover';
                 document.getElementById('homeBgOverlay').style.display = 'block';
             }
+
+            // Quick follow handler
+            document.querySelectorAll('.quick-follow-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const userId = this.getAttribute('data-id');
+                    fetch('/profile/follow/' + userId, {
+                        method: 'POST'
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.error) {
+                                alert(data.error);
+                                return;
+                            }
+                            if (data.followed) {
+                                this.innerText = 'Đã theo dõi';
+                                this.style.background = '#444';
+                                this.style.color = '#fff';
+                                this.style.border = 'none';
+                            } else {
+                                this.innerText = 'Theo dõi';
+                                this.style.background = 'transparent';
+                                this.style.color = 'var(--primary)';
+                                this.style.border = '1px solid var(--primary)';
+                            }
+                        })
+                        .catch(e => console.error(e));
+                });
+            });
         });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SockJS + STOMP for real-time notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script th:src="@{/js/home.js(v=3)}"></script>
+    <script>
+        // ===== NOTIFICATION BADGE (initial load) =====
+        const notifBadge = document.getElementById('notifBadge');
+        function updateBadge(count) {
+            if (!notifBadge) return;
+            if (count > 0) {
+                notifBadge.textContent = count > 99 ? '99+' : count;
+                notifBadge.style.display = '';
+            } else {
+                notifBadge.style.display = 'none';
+            }
+        }
+
+        // Load initial count from API
+        fetch('/api/notifications/count')
+            .then(r => r.json())
+            .then(d => updateBadge(d.count || 0))
+            .catch(() => { });
+
+        // ===== WEBSOCKET STOMP =====
+        // Inject userId từ server để subscribe đúng topic
+        const currentUserId = /*[[${sessionUser != null ? sessionUser.id : 0}]]*/ 0;
+        if (currentUserId > 0) {
+            try {
+                const sock = new SockJS('/ws');
+                const stompClient = Stomp.over(sock);
+                stompClient.debug = null;
+                stompClient.connect({}, function (frame) {
+                    // Subscribe topic riêng theo userId (không cần Principal/Security)
+                    stompClient.subscribe('/topic/user-' + currentUserId, function (msg) {
+                        const notif = JSON.parse(msg.body);
+                        // Tăng badge
+                        const cur = parseInt(notifBadge ? notifBadge.textContent : '0') || 0;
+                        updateBadge(cur + 1);
+                        // Hiện toast thông báo
+                        showNotifToast(notif);
+                    });
+                }, function (err) {
+                    console.log('WS error:', err);
+                });
+            } catch (e) { }
+        }
+
+        function showNotifToast(notif) {
+            const existing = document.querySelector('.notif-toast');
+            if (existing) existing.remove();
+
+            const ICONS = {
+                'FOLLOW': '👤',
+                'NEW_POST': '🖼️',
+                'COMMENT': '💬',
+                'POST_DELETED': '🗑️',
+                'POST_REPORTED': '🚩'
+            };
+            const icon = ICONS[notif.type] || '🔔';
+
+            const toast = document.createElement('div');
+            toast.className = 'notif-toast';
+            toast.style.cssText = `
+                position:fixed;bottom:24px;right:24px;z-index:9999;
+                background:#1a1a1a;border:1px solid #e91e63;
+                border-radius:14px;padding:14px 18px;
+                max-width:320px;cursor:pointer;
+                box-shadow:0 8px 32px rgba(0,0,0,0.5);
+                animation:slideInRight 0.3s ease;
+                display:flex;gap:12px;align-items:flex-start;
+            `;
+            toast.innerHTML = `
+                <span style="font-size:1.4rem;">${icon}</span>
+                <div>
+                    <div style="color:#fff;font-size:0.875rem;font-weight:600;margin-bottom:2px;">Đầu mục mới</div>
+                    <div style="color:#bbb;font-size:0.82rem;">${notif.message}</div>
+                </div>
+            `;
+            toast.addEventListener('click', () => {
+                window.location.href = notif.link || '/notifications';
+            });
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        // CSS animation cho toast
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(120%); opacity:0; }
+                to   { transform: translateX(0);    opacity:1; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 

@@ -11,6 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
+
 @Controller @RequiredArgsConstructor
 @RequestMapping("/upload")
 public class UploadController {
@@ -34,6 +40,8 @@ public class UploadController {
 
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy user!"));
+
+            if ("ADMIN".equals(user.getRole())) throw new RuntimeException("Admin không thể đăng bài!");
 
             if (image.isEmpty()) throw new RuntimeException("Vui lòng chọn ảnh!");
             if (image.getSize() > 10 * 1024 * 1024) throw new RuntimeException("Ảnh tối đa 10MB!");
@@ -59,5 +67,37 @@ public class UploadController {
                 .contentType(MediaType.IMAGE_JPEG)
                 .cacheControl(CacheControl.maxAge(7, java.util.concurrent.TimeUnit.DAYS))
                 .body(data);
+    }
+
+    @PostMapping("/chat-img")
+    @ResponseBody
+    public ResponseEntity<?> uploadChatImage(@RequestParam("file") MultipartFile file, HttpSession session) {
+        try {
+            if (session.getAttribute("email") == null) {
+                return ResponseEntity.status(401).body("Chưa đăng nhập");
+            }
+            if (file.isEmpty() || file.getSize() > 5 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body("Ảnh không hợp lệ hoặc > 5MB");
+            }
+            String ct = file.getContentType();
+            if (ct == null || !ct.startsWith("image/")) {
+                return ResponseEntity.badRequest().body("Chỉ hỗ trợ file ảnh");
+            }
+
+            String dirPathStr = System.getProperty("user.dir") + "/uploads/chat/";
+            Path dirPath = Paths.get(dirPathStr);
+            if (!Files.exists(dirPath)) Files.createDirectories(dirPath);
+
+            String original = file.getOriginalFilename();
+            String ext = (original != null && original.contains(".")) ? original.substring(original.lastIndexOf(".")) : ".jpg";
+            String fileName = "chat_" + System.currentTimeMillis() + ext;
+            
+            Files.write(dirPath.resolve(fileName), file.getBytes());
+
+            String imageUrl = "/uploads/chat/" + fileName;
+            return ResponseEntity.ok(Map.of("url", imageUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
     }
 }

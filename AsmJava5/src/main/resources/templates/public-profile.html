@@ -123,15 +123,15 @@
                                 th:alt="${post.title}" class="post-img">
                             <img th:if="${post.imageData == null && post.imageUrl != null}" th:src="${post.imageUrl}"
                                 th:alt="${post.title}" class="post-img">
-                        </a>
-                        <div class="post-overlay">
-                            <div class="post-overlay-stats">
-                                <span><i class="bi bi-heart-fill"></i>
-                                    <span th:text="${post.likesCount}">0</span></span>
-                                <span><i class="bi bi-eye-fill"></i>
-                                    <span th:text="${post.views}">0</span></span>
+                            <div class="post-overlay">
+                                <div class="post-overlay-stats">
+                                    <span><i class="bi bi-heart-fill"></i>
+                                        <span th:text="${post.likesCount}">0</span></span>
+                                    <span><i class="bi bi-eye-fill"></i>
+                                        <span th:text="${post.views}">0</span></span>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                     <div class="post-info">
                         <a th:href="@{/post/{id}(id=${post.id})}" class="text-decoration-none text-dark">
@@ -160,6 +160,10 @@
                     })
                         .then(res => res.json())
                         .then(data => {
+                            if (data.error) {
+                                alert(data.error);
+                                return;
+                            }
                             const icon = this.querySelector('i');
                             const textObj = document.getElementById('followBtnText');
                             const followerCountObj = document.getElementById('followerCount');
@@ -178,7 +182,9 @@
                                 textObj.innerText = ' Theo dõi';
                             }
 
-                            followerCountObj.innerText = data.followersCount;
+                            if (data.followersCount !== undefined) {
+                                followerCountObj.innerText = data.followersCount;
+                            }
                         })
                         .catch(err => {
                             console.error('Lỗi khi follow:', err);
